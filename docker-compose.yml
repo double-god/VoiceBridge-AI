@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: voice_db
+    restart: always
+    environment:
+      # 从 .env 文件读取变量
+      POSTGRES_USER: ${DB_USER}   #账号
+      POSTGRES_PASSWORD: ${DB_PASSWORD}   #密码
+      POSTGRES_DB: ${DB_NAME}   #数据库名
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - voice-net
+
+  # 对象存储服务 MinIO
+  minio:
+    image: minio/minio:latest
+    container_name: voice_minio
+    restart: always
+    command: server /data --console-address ":9001"  # 启动 MinIO 并开启控制台
+    ports:  # 映射 MinIO 端口
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      # 从 .env 文件读取变量
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks:
+      - voice-net
+
+  # MinIO 初始化脚本
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    networks:
+      - voice-net
+    # 也使用了环境变量
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb myminio/voices;
+      /usr/bin/mc anonymous set public myminio/voices;
+      exit 0;
+      "
+
+
+
+      backend:
+    build: ./backend
+    # ... 其他配置
+    environment:
+      # 👇 这一行非常重要！
+      # 它告诉 Docker：虽然 .env 里写的是 5433（给本地开发用的），
+      # 但你在容器里跑的时候，请强制使用 5432！
+      - DB_PORT=5432
+      - DB_HOST=db
+
+
+networks:
+  voice-net:
+    driver: bridge
+
+volumes:
+  pg_data:
+  minio_data:
+
+
