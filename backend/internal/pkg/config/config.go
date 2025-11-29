@@ -1,4 +1,5 @@
 package config
+
 import (
 	"fmt"
 	"os"
@@ -6,23 +7,29 @@ import (
 	"github.com/joho/godotenv"
 )
 
-//config聚合配置项
+// config聚合配置项
 type Config struct {
-	App AppConfig
+	App      AppConfig
 	Database DatabaseConfig
-	Minio MinioConfig
-	Ai AIConfig
+	Minio    MinioConfig
+	Ai       AIConfig
+	JWT      JWTConfig // 新增：集中管理 JWT 相关配置
 }
 
-//应用基础配置
+// 应用基础配置
 type AppConfig struct {
 	Name string
 	Env  string
 	Port string
-	JwtSecret string
 }
 
-//数据库配置
+// 单独拆分 JWT 配置，避免在 AppConfig 中混杂过多字段
+type JWTConfig struct {
+	Secret        string // 签名密钥
+	ExpireMinutes int    // 过期时间（分钟）
+}
+
+// 数据库配置
 type DatabaseConfig struct {
 	Host     string
 	Port     string
@@ -31,26 +38,25 @@ type DatabaseConfig struct {
 	DBName   string
 }
 
-
-//MinIO配置
+// MinIO配置
 type MinioConfig struct {
-	Endpoint        string
-	User 		string
-	Password	string
-	BucketName	string
-	UseSSL        	bool  // 是否使用SSL
+	Endpoint   string
+	User       string
+	Password   string
+	BucketName string
+	UseSSL     bool // 是否使用SSL
 }
 
-//AI服务配置
+// AI服务配置
 type AIConfig struct {
-	Host string
-	Port string
+	Host       string
+	Port       string
 	ServiceUrl string
-	LLMApiKey string
+	LLMApiKey  string
 }
 
-//LoadConfig 加载配置
-func LoadConfig()*Config{
+// LoadConfig 加载配置
+func LoadConfig() *Config {
 	//加载.env文件
 	//生产环境可能不用.env文件，而是直接注入环境变量，可以忽略load错误
 	_ = godotenv.Load()
@@ -58,10 +64,22 @@ func LoadConfig()*Config{
 	//组装配置
 	return &Config{
 		App: AppConfig{
-			Name:      os.Getenv("APP_NAME"),
-			Env:       os.Getenv("APP_ENV"),
-			Port:      os.Getenv("APP_PORT"),
-			JwtSecret: os.Getenv("JWT_SECRET"),
+			Name: os.Getenv("APP_NAME"),
+			Env:  os.Getenv("APP_ENV"),
+			Port: os.Getenv("APP_PORT"),
+		},
+		JWT: JWTConfig{
+			Secret: os.Getenv("JWT_SECRET"),
+			ExpireMinutes: func() int { // 解析过期时间，默认 60 分钟
+				if v := os.Getenv("JWT_EXPIRE_MINUTES"); v != "" {
+					var n int
+					fmt.Sscanf(v, "%d", &n)
+					if n > 0 {
+						return n
+					}
+				}
+				return 60
+			}(),
 		},
 		Database: DatabaseConfig{
 			Host:     os.Getenv("DB_HOST"),
@@ -75,7 +93,7 @@ func LoadConfig()*Config{
 			User:       os.Getenv("MINIO_USER"),
 			Password:   os.Getenv("MINIO_PASSWORD"),
 			BucketName: os.Getenv("MINIO_BUCKET"),
-			UseSSL:	 os.Getenv("MINIO_USE_SSL") == "false",
+			UseSSL:     os.Getenv("MINIO_USE_SSL") == "false",
 		},
 		Ai: AIConfig{
 			Host:       os.Getenv("AI_AGENT_HOST"),
