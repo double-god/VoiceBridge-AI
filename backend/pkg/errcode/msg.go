@@ -7,7 +7,7 @@ const (
 	InvalidParams = 10002
 	NotFound      = 10003
 
-	// --- Auth 模块 (200xx) ---
+	// Auth 模块
 	Unauthorized      = 20001 // 未登录
 	TokenMalformed    = 20002 // Token 乱码
 	TokenExpired      = 20003 // Token 过期
@@ -28,7 +28,6 @@ const (
 	RecordNotFound  = 30004 // 找不到录音
 	AnalysisFailed  = 30005 // AI 分析中途失败
 
-	// --- Agent 模块 (400xx) [新增] ---
 	AgentTaskError = 40001 // 提交任务给 Python 失败
 )
 
