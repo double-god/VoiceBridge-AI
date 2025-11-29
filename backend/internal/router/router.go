@@ -2,6 +2,7 @@ package router
 
 import (
 	"voicebridge/internal/app/handler"
+	"voicebridge/internal/pkg/config"
 	"voicebridge/internal/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -11,27 +12,28 @@ import (
 // Router 不生产 Handler，只是 Handler 的搬运工
 func Setup(
 	r *gin.Engine,
+	cfg *config.Config,
 	userH *handler.UserHandler,
 	voiceH *handler.VoiceHandler,
 ) {
-	// 1. 全局中间件 (CORS, Logger, Recovery)
+	// 全局中间件 (CORS, Logger, Recovery)
 	r.Use(gin.Recovery())
-	r.Use(middleware.Cors()) // 解决跨域（原 Cores() 已兼容保留）
+	r.Use(middleware.Cors()) // 解决跨域
 
-	// 2. 路由分组
+	// 路由分组
 	api := r.Group("/api/v1")
 	{
-		// --- 公开接口 (无需 Token) ---
+		// 公开接口 (无需 Token)
 		authGroup := api.Group("/auth")
 		{
 			authGroup.POST("/login", userH.Login)
 			authGroup.POST("/register", userH.Register)
 		}
 
-		// --- 受保护接口 (需要 JWT Token) ---
+		// 受保护接口 (需要 JWT Token)
 		// 使用 JWT 中间件拦截
 		protected := api.Group("/")
-		protected.Use(middleware.JWTAuth())
+		protected.Use(middleware.JWTAuth(cfg))
 		{
 			// 用户模块
 			userGroup := protected.Group("/user")

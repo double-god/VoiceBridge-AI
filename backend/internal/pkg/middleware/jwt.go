@@ -18,7 +18,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func JWTAuth() gin.HandlerFunc {
+// JWTAuth 接收初始化时加载的配置，避免每次请求重复读取 .env
+func JWTAuth(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//获取请求头中的token
 		tokenHeader := c.GetHeader(constant.TokenHeaderKey)
@@ -34,10 +35,7 @@ func JWTAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		//解析token
-		//动态加载
-		cfg := config.LoadConfig()
-		// 使用新的 cfg.JWT.Secret 字段（从 .env JWT_SECRET 加载）
+		// 解析 token（使用初始化时注入的 cfg，无需每次加载配置）
 		claims, err := utils.ParseToken(cfg.JWT.Secret, parts[1])
 		if err != nil {
 			//统一报过期或未授权，额外记录日志帮助排查
