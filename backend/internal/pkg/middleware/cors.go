@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Cors 跨域中间件（已统一命名，移除旧 Cores 包装）
+// Cors 跨域中间件
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
