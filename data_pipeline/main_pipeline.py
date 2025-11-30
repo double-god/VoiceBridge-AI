@@ -10,9 +10,9 @@ Usage:
 import shutil
 from pathlib import Path
 
-from processors import batch_convert
-from parsers import ChaParser
-from loaders import DemoLoader
+from .processors import batch_convert
+from .parsers import ChaParser
+from .loaders import DemoLoader
 
 
 # 路径配置
