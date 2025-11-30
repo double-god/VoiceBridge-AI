@@ -1,0 +1,10 @@
+# ai_agent/requirements.txt
+fastapi
+uvicorn
+openai-whisper
+edge-tts
+minio
+psycopg2-binary
+sqlalchemy
+python-dotenv
+requests

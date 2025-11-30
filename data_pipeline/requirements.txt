@@ -1,0 +1,12 @@
+# Data Pipeline 依赖
+# 系统依赖 (需要手动安装):
+#   Ubuntu/Debian: sudo apt install ffmpeg
+#   macOS:         brew install ffmpeg
+#   Windows:       choco install ffmpeg 或从官网下载
+#
+# Python 依赖:
+#   本模块仅使用 Python 标准库，无需额外 pip 安装
+#   - subprocess (调用 ffmpeg)
+#   - re, dataclasses (解析 .cha)
+#   - json, pathlib (数据加载)
+

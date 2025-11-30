@@ -34,3 +34,7 @@ Thumbs.db
 *.swo
 *.out
 tmp/
+# Python 虚拟环境
+venv/
+.venv/
+*.egg-info/
