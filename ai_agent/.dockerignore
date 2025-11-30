@@ -1,0 +1,22 @@
+# 忽略本地虚拟环境
+
+venv/
+.venv/
+
+# 忽略字节码缓存
+
+pycache/
+*.pyc
+*.pyo
+*.pyd
+
+# 忽略 Git 目录
+
+.git/
+.gitignore
+
+# 忽略日志和临时文件
+
+*.log
+*.wav
+*.mp3
