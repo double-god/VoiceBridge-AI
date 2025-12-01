@@ -16,7 +16,8 @@ from data_pipeline.loaders.demo_loader import DemoLoader  # noqa: E402
 
 # 路径配置
 BASE_DIR = Path(__file__).resolve().parent
-VIDEO_DIR = BASE_DIR / "assets" / "video"  # 视频源目录
+PROJECT_ROOT = BASE_DIR.parent
+VIDEO_DIR = PROJECT_ROOT / "data_pipeline" / "assets" / "video"  # 视频源目录
 DATA_DIR = BASE_DIR / "data" / "demo"  # JSON + WAV 输出目录
 OUTPUT_JSON_PATH = BASE_DIR / "data" / "grand_round_dataset.json"
 
