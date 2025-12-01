@@ -3,7 +3,17 @@
   "video_file": "ROSE.mp4",
   "utterances": [],
   "metadata": {
-    "description": "视频: ROSE.mp4",
-    "source": "local"
+    "description": "Case Study 3: Major Neurocognitive Disorder",
+    "patient_profile": {
+      "name": "Rose",
+      "age": 83,
+      "condition": "Major NCD, Hearing loss (lost hearing aids), Hypertension",
+      "habits": "Spending time with dogs, Visiting family",
+      "common_needs": [
+        "Find hearing aids",
+        "Brush teeth reminder",
+        "Help with self-care"
+      ]
+    }
   }
 }
