@@ -38,3 +38,29 @@ tmp/
 venv/
 .venv/
 *.egg-info/
+
+# ========== 数据集与媒体文件 (不上传) ==========
+# 视频源文件
+data_pipeline/assets/video/*.mp4
+data_pipeline/assets/video/*.avi
+data_pipeline/assets/video/*.mov
+data_pipeline/assets/video/*.mkv
+
+# TalkBank .cha 文件
+data_pipeline/assets/cha/*.cha
+
+# 转码后的音频
+ai_agent/data/demo/*.wav
+ai_agent/data/audio/
+
+# 生成的数据集 JSON (可选：如果想分享可以注释掉)
+# ai_agent/data/grand_round_dataset.json
+
+# 通用媒体文件 (递归忽略)
+**/*.mp4
+**/*.avi
+**/*.mov
+**/*.mkv
+**/*.wav
+**/*.mp3
+**/*.flac
