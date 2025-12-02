@@ -3,7 +3,17 @@
   "video_file": "JAMES.mp4",
   "utterances": [],
   "metadata": {
-    "description": "视频: JAMES.mp4",
-    "source": "local"
+    "description": "Case Study 2: Mild Neurocognitive Disorder (NCD)",
+    "patient_profile": {
+      "name": "James",
+      "age": 76,
+      "condition": "Mild NCD, Bilateral mild hearing loss, High cholesterol",
+      "habits": "Nightly walks, Board games, Eating fast food",
+      "common_needs": [
+        "Find my wallet",
+        "Set alarm for appointment",
+        "Check phone"
+      ]
+    }
   }
 }

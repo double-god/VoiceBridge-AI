@@ -1,17 +1,18 @@
 """
 Demo 数据集加载脚本
-将视频转码并生成 JSON 数据集
+将视频转码、清洗并生成 JSON 数据集
 """
 
 import json
 import sys
 from pathlib import Path
 
-# 添加项目根目录到路径
+# 把根目录加到路径
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from data_pipeline.loaders.demo_loader import DemoLoader  # noqa: E402
+from data_pipeline.processors.audio_cleaner import batch_clean_audio  # noqa: E402
 
 
 # 路径配置
@@ -48,11 +49,22 @@ def main():
 
     # 加载数据 (自动转码)
     samples = loader.load()
-    print(f"[完成] 处理了 {len(samples)} 个样本")
+    print(f"[完成] 转码了 {len(samples)} 个样本")
 
     if not samples:
         print("[警告] 无样本可导出")
         return
+
+    # 音频清洗：降噪 + 静音切分 + 归一化 + 重采样到 16kHz
+    print("[开始] 音频清洗...")
+    batch_clean_audio(
+        DATA_DIR,
+        pattern="*.wav",
+        sample_rate=16000,  # Whisper 推荐
+        normalize=True,
+        denoise=True,
+        remove_silence=True,
+    )
 
     # 转换并保存为 JSON
     OUTPUT_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)

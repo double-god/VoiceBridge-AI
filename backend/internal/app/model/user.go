@@ -1,4 +1,5 @@
 package model
+
 import "gorm.io/gorm"
 
 type User struct {
@@ -8,9 +9,11 @@ type User struct {
 	Role     string `gorm:"type:varchar(20);default:'patient'" json:"role"`
 
 	//患者画像
-	HealthInfo  string `gorm:"type:text" json:"health_info"`  // 健康状况
+	Name        string `gorm:"type:varchar(100)" json:"name"` // 显示名称
+	Age         int    `gorm:"type:int" json:"age"`           // 年龄
+	Condition   string `gorm:"type:text" json:"condition"`    // 健康状况
 	Habits      string `gorm:"type:text" json:"habits"`       // 生活习惯
-	CommonItems string `gorm:"type:text" json:"common_items"` // 常用物品
+	CommonNeeds string `gorm:"type:text" json:"common_needs"` // 常见需求
 
 	// 关联：一个用户有多条录音
 	VoiceRecords []VoiceRecord `gorm:"foreignKey:UserID" json:"voice_records,omitempty"`

@@ -3,7 +3,16 @@
   "video_file": "Anita.mp4",
   "utterances": [],
   "metadata": {
-    "description": "视频: Anita.mp4",
-    "source": "local"
+    "description": "Case Study 1: Cognitively Unimpaired",
+    "patient_profile": {
+      "name": "Anita",
+      "age": 77,
+      "condition": "Diabetes, Hypertension, Memory difficulties (forgetting names/intentions)",
+      "habits": "Yoga, Pickleball, Writing memoir, Book club",
+      "common_needs": [
+        "Remind me why I came here",
+        "What is that person's name?"
+      ]
+    }
   }
 }

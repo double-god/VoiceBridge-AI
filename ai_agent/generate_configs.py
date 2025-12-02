@@ -11,6 +11,62 @@ PROJECT_ROOT = BASE_DIR.parent
 VIDEO_DIR = PROJECT_ROOT / "data_pipeline" / "assets" / "video"  # 视频源目录
 CONFIG_DIR = BASE_DIR / "data" / "demo"  # 配置输出目录
 
+# 患者画像元数据 (对应 FRD 中的 F5 患者画像配置)
+CASE_STUDY_METADATA = {
+    "Anita": {
+        "description": "Case Study 1: Cognitively Unimpaired",
+        "patient_profile": {
+            "name": "Anita",
+            "age": 77,
+            "condition": "Diabetes, Hypertension, Memory difficulties (forgetting names/intentions)",
+            "habits": "Yoga, Pickleball, Writing memoir, Book club",
+            "common_needs": [
+                "Remind me why I came here",
+                "What is that person's name?",
+            ],
+        },
+    },
+    "JAMES": {
+        "description": "Case Study 2: Mild Neurocognitive Disorder (NCD)",
+        "patient_profile": {
+            "name": "James",
+            "age": 76,
+            "condition": "Mild NCD, Bilateral mild hearing loss, High cholesterol",
+            "habits": "Nightly walks, Board games, Eating fast food",
+            "common_needs": [
+                "Find my wallet",
+                "Set alarm for appointment",
+                "Check phone",
+            ],
+        },
+    },
+    "ROSE": {
+        "description": "Case Study 3: Major Neurocognitive Disorder",
+        "patient_profile": {
+            "name": "Rose",
+            "age": 83,
+            "condition": "Major NCD, Hearing loss (lost hearing aids), Hypertension",
+            "habits": "Spending time with dogs, Visiting family",
+            "common_needs": [
+                "Find hearing aids",
+                "Brush teeth reminder",
+                "Help with self-care",
+            ],
+        },
+    },
+}
+
+
+def get_metadata(sample_id: str) -> dict:
+    """获取样本的元数据，优先使用预定义的患者画像"""
+    if sample_id in CASE_STUDY_METADATA:
+        return CASE_STUDY_METADATA[sample_id]
+    # 未知样本使用默认元数据
+    return {
+        "description": f"视频: {sample_id}.mp4",
+        "source": "local",
+    }
+
 
 def main():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -36,10 +92,7 @@ def main():
             "sample_id": sample_id,
             "video_file": video_path.name,
             "utterances": [],
-            "metadata": {
-                "description": f"视频: {video_path.name}",
-                "source": "local",
-            },
+            "metadata": get_metadata(sample_id),
         }
 
         with open(config_path, "w", encoding="utf-8") as f:
