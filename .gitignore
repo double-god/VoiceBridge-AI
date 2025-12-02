@@ -53,6 +53,9 @@ data_pipeline/assets/cha/*.cha
 ai_agent/data/demo/*.wav
 ai_agent/data/audio/
 
+# 生成的数据集 (包含本地路径，可重新生成)
+ai_agent/data/grand_round_dataset.json
+
 # 生成的数据集 JSON (可选：如果想分享可以注释掉)
 # ai_agent/data/grand_round_dataset.json
 

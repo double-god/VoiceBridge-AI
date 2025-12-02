@@ -30,9 +30,11 @@ type LoginRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	HealthInfo  string `json:"health_info"`
+	Name        string `json:"name"`
+	Age         int    `json:"age"`
+	Condition   string `json:"condition"`
 	Habits      string `json:"habits"`
-	CommonItems string `json:"common_items"`
+	CommonNeeds string `json:"common_needs"`
 }
 
 // 注册接口
@@ -98,9 +100,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 			"id":           user.ID,
 			"username":     user.Username,
 			"role":         user.Role,
-			"health_info":  user.HealthInfo,
+			"name":         user.Name,
+			"age":          user.Age,
+			"condition":    user.Condition,
 			"habits":       user.Habits,
-			"common_items": user.CommonItems,
+			"common_needs": user.CommonNeeds,
 		},
 	})
 }
@@ -125,9 +129,11 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	// 返回敏感信息过滤后的数据
 	response.Success(c, gin.H{
 		"username":     user.Username,
-		"health_info":  user.HealthInfo,
+		"name":         user.Name,
+		"age":          user.Age,
+		"condition":    user.Condition,
 		"habits":       user.Habits,
-		"common_items": user.CommonItems,
+		"common_needs": user.CommonNeeds,
 	})
 }
 
@@ -150,9 +156,11 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	// 构造更新 Map
 	updates := gin.H{
-		"health_info":  req.HealthInfo,
+		"name":         req.Name,
+		"age":          req.Age,
+		"condition":    req.Condition,
 		"habits":       req.Habits,
-		"common_items": req.CommonItems,
+		"common_needs": req.CommonNeeds,
 	}
 
 	// 4. 执行更新

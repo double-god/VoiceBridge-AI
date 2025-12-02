@@ -96,9 +96,9 @@ func (h *VoiceHandler) StreamStatus(c *gin.Context) {
 			// 查询最新状态
 			record, err := h.svc.GetStatus(uint(recordID))
 			if err != nil {
-				// 如果查不到记录，推一个错误事件然后关闭
+				// If record not found, push error event then close
 				c.SSEvent("message", map[string]interface{}{
-					"status": "error", "msg": "记录不存在",
+					"status": "error", "msg": "Record not found",
 				})
 				return false
 			}
@@ -109,7 +109,7 @@ func (h *VoiceHandler) StreamStatus(c *gin.Context) {
 				"progress": calculateProgress(record.Status),
 			}
 
-			// 如果完成了，把结果带上
+			// If done, include result
 			if record.Status == "done" && record.AnalysisResult.ID != 0 {
 				data["asr_text"] = record.AnalysisResult.AsrText
 				data["refined_text"] = record.AnalysisResult.RefinedText
