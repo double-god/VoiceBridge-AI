@@ -1,20 +1,43 @@
-from fastapi import APIRouter, BackgroundTasks
-from schemas.task import TaskRequest
-from services.pipeline import run_pipeline
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel
+from services.pipeline import process_voice_record
 
 router = APIRouter()
 
-@router.post("/process")
-async def process_voice(task: TaskRequest, background_tasks: BackgroundTasks):
-    """
-    接收Go后端语音处理请求,异步运行处理流水线。
 
-    Args:
-        task: 包含 record_id、minio_bucket 和 minio_key 的任务请求
-        background_tasks是FastAPI 的后台任务管理器
+class ProcessRequest(BaseModel):
+    """处理请求的模型"""
 
-    Returns:
-        任务接收确认信息
+    record_id: int
+    user_id: int
+    minio_key: str
+
+
+class ProcessResponse(BaseModel):
+    """处理响应的模型"""
+
+    message: str
+    record_id: int
+
+
+@router.post("/process", response_model=ProcessResponse)
+async def process_voice(request: ProcessRequest, background_tasks: BackgroundTasks):
     """
-    background_tasks.add_task(run_pipeline, task.record_id, task.minio_key)
-    return {"msg": f"任务{task.record_id} 已接收，正在后台处理。"}
+    接收 Go 后端语音处理请求, 异步处理语音记录
+
+    - Go 后端上传语音文件到 MinIO 后, 调用此接口
+    - 返回后立即开始后台处理
+    - 前端 SSE 轮询 Go 后端获取处理状态和结果
+    """
+    # 添加到后台任务队列
+    background_tasks.add_task(
+        process_voice_record, request.record_id, request.minio_key, request.user_id
+    )
+
+    return ProcessResponse(message="处理任务已提交", record_id=request.record_id)
+
+
+@router.get("/health")
+async def health_check():
+    """健康检查"""
+    return {"status": "ok", "service": "ai_agent"}

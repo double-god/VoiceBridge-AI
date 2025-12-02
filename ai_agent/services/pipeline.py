@@ -1,85 +1,138 @@
 import os
-import asyncio
-from sqlalchemy.orm import Session
-from ..core.database import SessionLocal, VoiceRecord, AnalysisResult, User
-from ..core import asr_whisper, llm_reasoning, tts_edge, storage
-from ..core.config import settings
+import json
+import tempfile
+
+from core import asr_whisper, llm_reasoning, tts_edge, storage
+from core.database import (
+    SessionLocal,
+    update_record_status,
+    get_user_profile,
+    save_analysis_result,
+)
 
 
-async def run_pipeline(record_id: int, minio_key: str):
+async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> dict:
     """
-    运行语音处理流水线，下载音频文件，进行转录、分析和文本转语音合成。
+    处理语音流程
+    流程:
+    1. 更新状态为 processing_asr
+    2. 从 MinIO 下载音频
+    3. 执行 ASR
+    4. 更新状态为 processing_llm
+    5. 执行 LLM 推理
+    6. 更新状态为 processing_tts
+    7. 执行 TTS 合成
+    8. 上传 TTS 音频到 MinIO
+    9. 更新状态为 done, 保存所有结果
+
+    Args:
+        record_id: 语音记录 ID
+        minio_key: MinIO 中的音频文件 key
+        user_id: 用户 ID
+
+    Returns:
+        处理结果字典
     """
-    db: Session = SessionLocal()
-    temp_audio = f"temp_{record_id}.wav"
-    temp_tts = ""
+    db = SessionLocal()
+    temp_files = []  # 记录临时文件, 最后清理
 
     try:
-        print(f"开始处理记录ID: {record_id}")
+        # 更新状态
+        update_record_status(db, record_id, "processing_asr")
+        print(f"[Pipeline] 开始处理记录 {record_id}")
 
-        # 获取用户画像
-        record = db.query(VoiceRecord).filter(VoiceRecord.id == record_id).first()
-        if not record:
-            print(f"记录ID {record_id} 未找到")
-            return
+        # 从 MinIO 下载音频
+        local_audio_path = storage.download_file(minio_key)
+        temp_files.append(local_audio_path)
 
-        user = db.query(User).filter(User.id == record.user_id).first()
-        profile = {
-            "name": user.name or user.username,
-            "age": user.age or "未知",
-            "condition": user.condition or "未知",
-            "habits": user.habits or "未知",
-            "common_needs": user.common_needs.split(",") if user.common_needs else [],
-        }
+        # 执行 ASR
+        print(f"[Pipeline] 执行 ASR...")
+        raw_text = asr_whisper.transcribe(local_audio_path)
+        print(f"[Pipeline] ASR 结果: {raw_text}")
 
-        # ASR 转录
-        _update_status(db, record, "处理中")
-        storage.download_file(settings.MINIO_BUCKET, minio_key, temp_audio)
-        raw_text = asr_whisper.transcribe_whisper(temp_audio)
-        print(f"转录结果: {raw_text}")
+        # 更新状态, 准备 LLM
+        update_record_status(db, record_id, "processing_llm", raw_text=raw_text)
 
-        # LLM 分析
-        _update_status(db, record, "分析中")
-        ai_res = llm_reasoning.infer_intent(raw_text, profile)
-        print(
-            f" [LLM]{ai_res['decision']} - {ai_res['refined_text']} (置信度: {ai_res['confidence']})"
+        # 获取用户画像, 执行 LLM 推理
+        print(f"[Pipeline] 执行 LLM 推理...")
+        user_profile = get_user_profile(db, user_id)
+        llm_result = llm_reasoning.infer_intent(raw_text, user_profile)
+        print(f"[Pipeline] LLM 结果: {llm_result}")
+
+        refined_text = llm_result.get("refined_text", raw_text)
+        confidence = llm_result.get("confidence", 0)
+        decision = llm_result.get("decision", "reject")
+        reason = llm_result.get("reason", "")
+
+        # 更新状态, 准备 TTS
+        update_record_status(
+            db,
+            record_id,
+            "processing_tts",
+            refined_text=refined_text,
+            confidence=str(confidence),
+            decision=decision,
+            reason=reason,
         )
 
-        # TTS 合成
+        # 执行 TTS (当 decision 为 accept
         tts_url = ""
-        if ai_res["decision"] == "accept":
-            _update_status(db, record, "合成中")
-            temp_tts = await tts_edge.tts_edge(ai_res["refined_text"], ".")
+        if decision == "accept":
+            print(f"[Pipeline] 执行 TTS...")
+            temp_dir = tempfile.mkdtemp()
+            tts_local_path = await tts_edge.tts_edge(refined_text, temp_dir)
+            temp_files.append(tts_local_path)
 
-            tts_key = f"tts/{os.path.basename(temp_tts)}"
-            storage.upload_file(settings.MINIO_BUCKET, tts_key, temp_tts)
-
-            # 构造相对路径
-            tts_url = f"{settings.MINIO_BUCKET}/{tts_key}"
+            # 上传 TTS 到 MinIO
+            tts_object_name = f"tts/{record_id}_{os.path.basename(tts_local_path)}"
+            tts_url = storage.upload_file(tts_local_path, tts_object_name)
+            print(f"[Pipeline] TTS 上传完成: {tts_url}")
+        else:
+            print(f"[Pipeline] 跳过 TTS (decision={decision})")
 
         # 保存分析结果
-        analysis_result = AnalysisResult(
-            record_id=record_id,
-            decision=ai_res.get("decision", ""),
-            refined_text=ai_res.get("refined_text", ""),
-            confidence=ai_res.get("confidence", 0.0),
+        save_analysis_result(
+            db=db,
+            voice_record_id=record_id,
+            transcript=raw_text,
+            analysis_data=json.dumps(llm_result, ensure_ascii=False),
+            confidence=float(confidence),
+            decision=decision,
+            tts_audio_url=tts_url,
         )
-        db.add(analysis_result)
-        db.commit()
+
+        # 完成, 更新最终状态
+        update_record_status(db, record_id, "done", tts_url=tts_url)
+        print(f"[Pipeline] 记录 {record_id} 处理完成!")
+
+        return {
+            "record_id": record_id,
+            "status": "done",
+            "raw_text": raw_text,
+            "refined_text": refined_text,
+            "confidence": confidence,
+            "decision": decision,
+            "reason": reason,
+            "tts_url": tts_url,
+        }
 
     except Exception as e:
-        print(f"Task {record_id}失败: {e}")
-        _update_status(db, record, "failed")
+        # 出错时更新状态
+        print(f"[Pipeline] 处理失败: {e}")
+        update_record_status(db, record_id, "error", reason=str(e))
+        raise
 
     finally:
-        db.close()
         # 清理临时文件
-        if os.path.exists(temp_audio):
-            os.remove(temp_audio)
-        if temp_tts and os.path.exists(temp_tts):
-            os.remove(temp_tts)
-
-
-def _update_status(db, record, status):
-    record.status = status
-    db.commit()
+        for temp_file in temp_files:
+            try:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+                    parent_dir = os.path.dirname(temp_file)
+                    if parent_dir.startswith(tempfile.gettempdir()) and not os.listdir(
+                        parent_dir
+                    ):
+                        os.rmdir(parent_dir)
+            except Exception:
+                pass
+        db.close()

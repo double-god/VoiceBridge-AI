@@ -29,7 +29,7 @@ func Init(cfg *config.Config) *MinioClient {
 		logger.Log.Fatal("MinIO 连接失败", zap.Error(err))
 	}
 
-	// 检查 Bucket 是否存在，不存在则创建 (自动初始化)
+	// 检查 Bucket 是否存在，没就创建
 	ctx := context.Background()
 	exists, err := client.BucketExists(ctx, cfg.Minio.BucketName)
 	if err != nil {
@@ -49,7 +49,7 @@ func Init(cfg *config.Config) *MinioClient {
 	}
 }
 
-// UploadFile 上传文件 (封装了 PutObject)
+// UploadFile 上传文件封装了 PutObject
 // 返回minioKey, fileUrl, error
 func (m *MinioClient) UploadFile(file *multipart.FileHeader, objectName string) (string, string, error) {
 	src, err := file.Open()
@@ -68,14 +68,14 @@ func (m *MinioClient) UploadFile(file *multipart.FileHeader, objectName string) 
 
 	logger.Log.Info("文件上传 MinIO 成功", zap.String("key", info.Key))
 
-	// 生成预览/访问 URL (这里简单拼接，生产环境可能需要 PresignedURL 或 CDN)
+	// 生成预览/访问 URL (这里简单拼接，生产环境可能用到CDN等)
 	// 格式: http://endpoint/bucket/key
 	// 注意：如果 Endpoint 是 localhost，前端可能访问不到容器内的 localhost，这里先返回 key 供后端逻辑使用
 	// 前端展示 URL 可以由后端拼装
 	return info.Key, fmt.Sprintf("/%s/%s", m.bucketName, info.Key), nil
 }
 
-// GetClient 暴露原生客户端 (备用)
+// GetClient 暴露原生客户端
 func (m *MinioClient) GetClient() *minio.Client {
 	return m.client
 }

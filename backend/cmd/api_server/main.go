@@ -24,7 +24,7 @@ import (
 func main() {
 	// 初始化
 
-	// 先加载配置 (单例模式，只加载一次)
+	// 先加载配置 单例模式，只加载一次
 	cfg := config.LoadConfig()
 
 	// 初始化日志
