@@ -109,8 +109,8 @@ func (h *VoiceHandler) StreamStatus(c *gin.Context) {
 				"progress": calculateProgress(record.Status),
 			}
 
-			// If done, include result
-			if record.Status == "done" && record.AnalysisResult.ID != 0 {
+			// If completed, include result
+			if record.Status == "completed" && record.AnalysisResult.ID != 0 {
 				data["asr_text"] = record.AnalysisResult.AsrText
 				data["refined_text"] = record.AnalysisResult.RefinedText
 				data["tts_url"] = record.AnalysisResult.TtsAudioUrl
@@ -121,7 +121,7 @@ func (h *VoiceHandler) StreamStatus(c *gin.Context) {
 			c.SSEvent("message", data)
 
 			// 终止条件
-			if record.Status == "done" || record.Status == "failed" {
+			if record.Status == "completed" || record.Status == "failed" {
 				return false
 			}
 
@@ -163,7 +163,7 @@ func calculateProgress(status string) int {
 		return 60
 	case "processing_tts":
 		return 80
-	case "done":
+	case "completed":
 		return 100
 	default:
 		return 0
