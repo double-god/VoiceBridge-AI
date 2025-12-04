@@ -5,11 +5,17 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Loader2, UserPlus } from 'lucide-react';
+import bgImage from '@/assets/bg.png';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({
+    username: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -19,13 +25,38 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 重置错误
+    setFieldErrors({ username: '', password: '', confirmPassword: '' });
+    setError('');
+
+    // 手动验证
+    let hasError = false;
+    const newFieldErrors = { username: '', password: '', confirmPassword: '' };
+
+    if (!formData.username) {
+      newFieldErrors.username = '请填写此字段';
+      hasError = true;
+    }
+    if (!formData.password) {
+      newFieldErrors.password = '请填写此字段';
+      hasError = true;
+    }
+    if (!formData.confirmPassword) {
+      newFieldErrors.confirmPassword = '请填写此字段';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('两次输入的密码不一致');
       return;
     }
 
     setIsLoading(true);
-    setError('');
 
     try {
       const res = await register({
@@ -48,31 +79,35 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-50 p-4">
-      {/* 背景装饰 */}
-      <div className="pointer-events-none absolute left-0 top-0 z-0 h-full w-full overflow-hidden">
-        <div className="absolute -bottom-[30%] -right-[10%] h-[70%] w-[70%] rounded-full bg-green-200/30 blur-3xl" />
-        <div className="absolute -left-[10%] top-[10%] h-[50%] w-[50%] rounded-full bg-blue-200/30 blur-3xl" />
-      </div>
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{ 
+        backgroundImage: `url(${bgImage})` 
+      }}
+    >
+      {/* 黑色遮罩 */}
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
 
-      <Card className="z-10 w-full max-w-md border-gray-100 bg-white/80 shadow-xl backdrop-blur-sm">
-        <CardHeader className="space-y-1 pb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-green-600 shadow-lg shadow-green-200">
-            <UserPlus className="h-6 w-6 text-white" />
+      <Card className="w-[90vw] md:w-[50vw] lg:w-[35vw] shadow-2xl border-white/40 bg-white/30 backdrop-blur-xl z-10 relative p-[4vh]">
+        <CardHeader className="space-y-[1vh] text-center pb-[3vh]">
+          <div className="mx-auto w-[8vh] h-[8vh] bg-green-600/90 rounded-2xl flex items-center justify-center mb-[2vh] shadow-lg shadow-green-500/30 backdrop-blur-sm">
+            <UserPlus className="text-white h-[4vh] w-[4vh]" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">
+          <CardTitle className="text-[3vh] font-bold tracking-tight text-gray-900">
             创建账号
           </CardTitle>
-          <p className="text-sm text-gray-500">加入 VoiceBridge，开启智能语音之旅</p>
+          <p className="text-[1.6vh] text-gray-600 mt-[1vh]">加入 VoiceBridge，开启智能语音之旅</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-[2.5vh]" noValidate>
             <Input
               label="用户名"
               placeholder="设置您的用户名"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              required
+              error={fieldErrors.username}
+              className="h-[6vh] text-[1.8vh]"
+              labelClassName="text-[1.8vh] mb-[1vh]"
             />
             <Input
               label="密码"
@@ -80,7 +115,9 @@ export default function RegisterPage() {
               placeholder="设置您的密码"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
+              error={fieldErrors.password}
+              className="h-[6vh] text-[1.8vh]"
+              labelClassName="text-[1.8vh] mb-[1vh]"
             />
             <Input
               label="确认密码"
@@ -88,25 +125,27 @@ export default function RegisterPage() {
               placeholder="请再次输入密码"
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              required
+              error={fieldErrors.confirmPassword}
+              className="h-[6vh] text-[1.8vh]"
+              labelClassName="text-[1.8vh] mb-[1vh]"
             />
 
             {error && (
-              <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-600">
-                <span className="h-4 w-1 rounded-full bg-red-600" />
+              <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-[1vh] rounded-[1vh] bg-red-50 p-[1.5vh] text-[1.6vh] md:text-[1.8vh] font-medium text-red-600">
+                <span className="h-[1.6vh] w-[0.4vh] rounded-full bg-red-600" />
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
-              className="mt-6 w-full bg-gradient-to-r from-green-600 to-emerald-600 shadow-md transition-all duration-300 hover:from-green-700 hover:to-emerald-700 hover:shadow-lg"
+              className="mt-[2vh] w-full bg-gradient-to-r from-green-600 to-emerald-600 shadow-md transition-all duration-300 hover:from-green-700 hover:to-emerald-700 hover:shadow-lg h-[6vh] text-[1.8vh]"
               size="lg"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-[2vh] w-[2vh] animate-spin" />
                   注册中...
                 </>
               ) : (
@@ -114,7 +153,7 @@ export default function RegisterPage() {
               )}
             </Button>
 
-            <div className="mt-4 text-center text-sm text-gray-500">
+            <div className="mt-[2vh] text-center text-[1.6vh] text-gray-500">
               已有账号？{' '}
               <Link
                 to="/login"
