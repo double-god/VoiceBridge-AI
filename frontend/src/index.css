@@ -4,5 +4,5 @@
 
 /* 顺便加上针对老年人的全局优化 */
 body {
-  @apply antialiased text-gray-900 bg-gray-50;
+  @apply bg-gray-50 text-gray-900 antialiased;
 }
