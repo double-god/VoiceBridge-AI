@@ -48,7 +48,11 @@ export async function getCurrentUser(): Promise<ApiResponse<User>> {
 //用户登出，清除本地token
 export function logout(): void {
   localStorage.removeItem('token');
-  window.location.href = '/login';
+}
+
+// 更新用户信息
+export async function updateUser(data: Partial<User>): Promise<ApiResponse<User>> {
+  return post<User>('/user/update', data);
 }
 
 //导出为命名空间
