@@ -9,14 +9,7 @@ interface StatusCardProps {
 }
 
 export function StatusCard({ recordId }: StatusCardProps) {
-  const {
-    status,
-    progress,
-    message,
-    result,
-    error,
-    isCompleted
-  } = useVoiceProgress(recordId);
+  const { status, progress, message, result, error, isCompleted } = useVoiceProgress(recordId);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -30,28 +23,32 @@ export function StatusCard({ recordId }: StatusCardProps) {
   if (!recordId) return null;
 
   return (
-    <Card className="w-full max-w-md mx-auto mt-6 shadow-lg overflow-hidden transition-all duration-500">
-      <CardHeader className={cn(
-        "border-b transition-colors duration-300",
-        status === 'completed' ? "bg-green-50" :
-        status === 'failed' ? "bg-red-50" : "bg-blue-50"
-      )}>
+    <Card className="mx-auto mt-6 w-full max-w-md overflow-hidden shadow-lg transition-all duration-500">
+      <CardHeader
+        className={cn(
+          'border-b transition-colors duration-300',
+          status === 'completed' ? 'bg-green-50' : status === 'failed' ? 'bg-red-50' : 'bg-blue-50'
+        )}
+      >
         <div className="flex items-center gap-3">
           {status === 'completed' ? (
-            <CheckCircle2 className="w-6 h-6 text-green-600" />
+            <CheckCircle2 className="h-6 w-6 text-green-600" />
           ) : status === 'failed' ? (
-            <AlertCircle className="w-6 h-6 text-red-600" />
+            <AlertCircle className="h-6 w-6 text-red-600" />
           ) : (
-            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
           )}
           <CardTitle className="text-lg">
-            {status === 'completed' ? '处理完成' : 
-             status === 'failed' ? '处理失败' : 'AI 正在思考...'}
+            {status === 'completed'
+              ? '处理完成'
+              : status === 'failed'
+                ? '处理失败'
+                : 'AI 正在思考...'}
           </CardTitle>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-6 space-y-6">
+      <CardContent className="space-y-6 pt-6">
         {/* 进度条 */}
         {!isCompleted && (
           <div className="space-y-2">
@@ -59,8 +56,8 @@ export function StatusCard({ recordId }: StatusCardProps) {
               <span>{message}</span>
               <span className="font-medium">{progress}%</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div 
+            <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+              <div
                 className="h-full bg-blue-500 transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
               />
@@ -70,14 +67,14 @@ export function StatusCard({ recordId }: StatusCardProps) {
 
         {/* 错误信息 */}
         {status === 'failed' && (
-          <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">
+          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
             {error || '发生未知错误'}
           </div>
         )}
 
         {/* 结果展示 */}
         {status === 'completed' && result && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="animate-in fade-in slide-in-from-bottom-4 space-y-4 duration-500">
             <div className="space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 您的指令

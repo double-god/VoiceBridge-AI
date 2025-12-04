@@ -47,7 +47,7 @@ export function AudioRecorder({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
-      
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -81,25 +81,25 @@ export function AudioRecorder({
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto border-2 border-dashed border-gray-200 bg-gray-50/50">
-      <CardContent className="flex flex-col items-center justify-center py-10 space-y-6">
+    <Card className="mx-auto w-full max-w-md border-2 border-dashed border-gray-200 bg-gray-50/50">
+      <CardContent className="flex flex-col items-center justify-center space-y-6 py-10">
         <div
           className={cn(
-            "w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500",
-            isRecording ? "bg-red-100 animate-pulse" : "bg-blue-100",
-            isUploading && "bg-gray-100"
+            'flex h-24 w-24 items-center justify-center rounded-full transition-all duration-500',
+            isRecording ? 'animate-pulse bg-red-100' : 'bg-blue-100',
+            isUploading && 'bg-gray-100'
           )}
         >
           {isUploading ? (
-            <UploadCloud className="w-10 h-10 text-gray-500 animate-bounce" />
+            <UploadCloud className="h-10 w-10 animate-bounce text-gray-500" />
           ) : isRecording ? (
-            <Mic className="w-10 h-10 text-red-500" />
+            <Mic className="h-10 w-10 text-red-500" />
           ) : (
-            <Mic className="w-10 h-10 text-blue-500" />
+            <Mic className="h-10 w-10 text-blue-500" />
           )}
         </div>
 
-        <div className="text-center space-y-2">
+        <div className="space-y-2 text-center">
           <h3 className="text-lg font-semibold text-gray-900">
             {isUploading ? '正在上传...' : isRecording ? '录音中...' : '点击开始录音'}
           </h3>
@@ -114,9 +114,9 @@ export function AudioRecorder({
               size="lg"
               onClick={startRecording}
               disabled={isUploading}
-              className="w-40 rounded-full shadow-lg hover:shadow-xl transition-all"
+              className="w-40 rounded-full shadow-lg transition-all hover:shadow-xl"
             >
-              <Mic className="w-4 h-4 mr-2" />
+              <Mic className="mr-2 h-4 w-4" />
               开始录音
             </Button>
           ) : (
@@ -124,9 +124,9 @@ export function AudioRecorder({
               size="lg"
               variant="danger"
               onClick={stopRecording}
-              className="w-40 rounded-full shadow-lg hover:shadow-xl transition-all animate-pulse"
+              className="w-40 animate-pulse rounded-full shadow-lg transition-all hover:shadow-xl"
             >
-              <Square className="w-4 h-4 mr-2 fill-current" />
+              <Square className="mr-2 h-4 w-4 fill-current" />
               停止录音
             </Button>
           )}
