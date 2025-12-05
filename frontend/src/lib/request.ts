@@ -6,7 +6,7 @@ import type { ApiResponse } from '@/types';
 //方便统一管理请求配置
 const request: AxiosInstance = axios.create({
   //基础路径
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
   //请求超时时间
   timeout: 25000,
   //默认请求头
@@ -26,6 +26,12 @@ request.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // 如果请求体是 FormData，删除 Content-Type 让浏览器自动设置 multipart/form-data
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     return config;
   },
 
@@ -61,8 +67,11 @@ request.interceptors.response.use(
     switch (status) {
       case 401:
         //token无效，跳转登录
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        // 如果当前已经在登录页，就不跳转，避免刷新页面导致错误信息丢失
+        if (window.location.pathname !== '/login') {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
         break;
       case 403:
         //禁止访问，没有权限

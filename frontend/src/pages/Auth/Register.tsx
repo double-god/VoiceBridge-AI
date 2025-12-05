@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { AxiosError } from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { register } from '@/api/auth';
+import type { ApiResponse } from '@/types';
+import { register, login } from '@/api/auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, CheckCircle } from 'lucide-react';
 import bgImage from '@/assets/bg.png';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [fieldErrors, setFieldErrors] = useState({
     username: '',
     password: '',
@@ -28,6 +31,7 @@ export default function RegisterPage() {
     // 重置错误
     setFieldErrors({ username: '', password: '', confirmPassword: '' });
     setError('');
+    setSuccess('');
 
     // 手动验证
     let hasError = false;
@@ -59,19 +63,42 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const res = await register({
+      // 1. 注册
+      const registerRes = await register({
         username: formData.username,
         password: formData.password,
       });
 
-      if (res.code === 200) {
-        // 注册成功后跳转到登录页
-        navigate('/login');
+      if (registerRes.code === 0 || registerRes.code === 200) {
+        // 2. 注册成功，自动登录
+        setSuccess('注册成功，正在自动登录...');
+        
+        const loginRes = await login({
+          username: formData.username,
+          password: formData.password,
+        });
+
+        if (loginRes.code === 0 || loginRes.code === 200) {
+          setSuccess('登录成功，正在跳转...');
+          // 延迟跳转，让用户看到成功提示
+          setTimeout(() => {
+            navigate('/');
+          }, 1000);
+        } else {
+          // 自动登录失败，跳转到登录页让用户手动登录
+          setError('自动登录失败，请手动登录');
+          setTimeout(() => {
+            navigate('/login');
+          }, 1500);
+        }
       } else {
-        setError(res.msg || '注册失败，请重试');
+        setError(registerRes.msg || '注册失败，请重试');
       }
     } catch (err) {
-      setError('网络错误，请稍后重试');
+      const error = err as AxiosError<ApiResponse>;
+      // 优先显示后端返回的错误信息
+      const msg = error.response?.data?.msg || '网络错误，请稍后重试';
+      setError(msg);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -108,6 +135,7 @@ export default function RegisterPage() {
               error={fieldErrors.username}
               className="h-[6vh] text-[1.8vh]"
               labelClassName="text-[1.8vh] mb-[1vh]"
+              autoComplete="username"
             />
             <Input
               label="密码"
@@ -118,6 +146,7 @@ export default function RegisterPage() {
               error={fieldErrors.password}
               className="h-[6vh] text-[1.8vh]"
               labelClassName="text-[1.8vh] mb-[1vh]"
+              autoComplete="new-password"
             />
             <Input
               label="确认密码"
@@ -128,12 +157,20 @@ export default function RegisterPage() {
               error={fieldErrors.confirmPassword}
               className="h-[6vh] text-[1.8vh]"
               labelClassName="text-[1.8vh] mb-[1vh]"
+              autoComplete="new-password"
             />
 
             {error && (
               <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-[1vh] rounded-[1vh] bg-red-50 p-[1.5vh] text-[1.6vh] md:text-[1.8vh] font-medium text-red-600">
                 <span className="h-[1.6vh] w-[0.4vh] rounded-full bg-red-600" />
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-[1vh] rounded-[1vh] bg-green-50 p-[1.5vh] text-[1.6vh] md:text-[1.8vh] font-medium text-green-600">
+                <CheckCircle className="h-[2vh] w-[2vh] text-green-600" />
+                {success}
               </div>
             )}
 

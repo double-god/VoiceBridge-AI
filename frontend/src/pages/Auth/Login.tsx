@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { AxiosError } from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import type { ApiResponse } from '@/types';
 import { login } from '@/api/auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight, CheckCircle } from 'lucide-react';
 import bgImage from '@/assets/bg.png';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [fieldErrors, setFieldErrors] = useState({
     username: '',
     password: '',
@@ -26,6 +29,7 @@ export default function LoginPage() {
     // 重置错误
     setFieldErrors({ username: '', password: '' });
     setError('');
+    setSuccess('');
 
     // 手动验证
     let hasError = false;
@@ -49,13 +53,19 @@ export default function LoginPage() {
 
     try {
       const res = await login(formData);
-      if (res.code === 200) {
-        navigate('/');
+      if (res.code === 0 || res.code === 200) {
+        setSuccess('登录成功，正在跳转...');
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
       } else {
         setError(res.msg || '登录失败，请检查用户名和密码');
       }
     } catch (err) {
-      setError('网络错误，请稍后重试');
+      const error = err as AxiosError<ApiResponse>;
+      // 优先显示后端返回的错误信息
+      const msg = error.response?.data?.msg || '网络错误，请稍后重试';
+      setError(msg);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -92,6 +102,7 @@ export default function LoginPage() {
               error={fieldErrors.username}
               className="h-[6vh] text-[1.8vh]"
               labelClassName="text-[1.8vh] mb-[1vh]"
+              autoComplete="username"
             />
             <Input
               label="密码"
@@ -102,12 +113,20 @@ export default function LoginPage() {
               error={fieldErrors.password}
               className="h-[6vh] text-[1.8vh]"
               labelClassName="text-[1.8vh] mb-[1vh]"
+              autoComplete="current-password"
             />
 
             {error && (
               <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-[1vh] rounded-[1vh] bg-red-50 p-[1.5vh] text-[1.6vh] md:text-[1.8vh] font-medium text-red-600">
                 <span className="h-[1.6vh] w-[0.4vh] rounded-full bg-red-600" />
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-[1vh] rounded-[1vh] bg-green-50 p-[1.5vh] text-[1.6vh] md:text-[1.8vh] font-medium text-green-600">
+                <CheckCircle className="h-[2vh] w-[2vh] text-green-600" />
+                {success}
               </div>
             )}
 

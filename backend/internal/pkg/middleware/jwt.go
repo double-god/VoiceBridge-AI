@@ -21,22 +21,32 @@ import (
 // JWTAuth 接收初始化时加载的配置，避免每次请求重复读取 .env
 func JWTAuth(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//获取请求头中的token
+		var tokenString string
+
+		//优先从请求头中获取token（标准方式）
 		tokenHeader := c.GetHeader(constant.TokenHeaderKey)
-		if tokenHeader == "" {
-			response.Error(c, http.StatusUnauthorized, errcode.ErrTokenMissing)
-			c.Abort()
-			return
+		if tokenHeader != "" {
+			//校验token格式 "Bearer <token>"
+			parts := strings.SplitN(tokenHeader, " ", 2)
+			if len(parts) == 2 && parts[0] == strings.TrimSpace(constant.TokenPrefix) {
+				tokenString = parts[1]
+			} else {
+				response.Error(c, http.StatusUnauthorized, errcode.ErrTokenInvalid)
+				c.Abort()
+				return
+			}
+		} else {
+			// 如果请求头中没有token，尝试从URL查询参数中获取（用于SSE连接）
+			tokenString = c.Query("token")
+			if tokenString == "" {
+				response.Error(c, http.StatusUnauthorized, errcode.ErrTokenMissing)
+				c.Abort()
+				return
+			}
 		}
-		//校验token格式
-		parts := strings.SplitN(tokenHeader, " ", 2)
-		if !(len(parts) == 2 && parts[0] == strings.TrimSpace(constant.TokenPrefix)) {
-			response.Error(c, http.StatusUnauthorized, errcode.ErrTokenInvalid)
-			c.Abort()
-			return
-		}
+
 		// 解析 token（使用初始化时注入的 cfg，无需每次加载配置）
-		claims, err := utils.ParseToken(cfg.JWT.Secret, parts[1])
+		claims, err := utils.ParseToken(cfg.JWT.Secret, tokenString)
 		if err != nil {
 			//统一报过期或未授权，额外记录日志帮助排查
 			logger.Log.Warn("token parse failed", zap.Error(err))

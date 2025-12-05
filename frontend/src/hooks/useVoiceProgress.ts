@@ -8,7 +8,7 @@ import type {
 
 //配置常量
 //api基础路径，从环境变量读取
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
 //状态对应的进度百分比映射
 //根据在状态估算进度（与后端 calculateProgress 保持一致）

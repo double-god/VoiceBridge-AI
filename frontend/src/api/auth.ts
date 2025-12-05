@@ -1,5 +1,5 @@
 //封装与用户认证相关的接口
-import { post, get } from '@/lib/request';
+import { post, get, put } from '@/lib/request';
 import type { User, ApiResponse } from '@/types';
 
 //定义请求/响应的类型
@@ -24,7 +24,7 @@ export interface RegisterRequest {
 //封装api函数
 export async function login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
   //post<loginResponse>指定响应数据类型
-  const result = await post<LoginResponse>('/user/login', data);
+  const result = await post<LoginResponse>('/auth/login', data);
 
   //登录成功后，保存token到本地存储
   if (result.data?.token) {
@@ -37,12 +37,12 @@ export async function login(data: LoginRequest): Promise<ApiResponse<LoginRespon
 //用户注册
 
 export async function register(data: RegisterRequest): Promise<ApiResponse<User>> {
-  return post<User>('/user/register', data);
+  return post<User>('/auth/register', data);
 }
 
 //获取当前用户信息。请求拦截器会自动添加authorization头
 export async function getCurrentUser(): Promise<ApiResponse<User>> {
-  return get<User>('/user/me');
+  return get<User>('/user/profile');
 }
 
 //用户登出，清除本地token
@@ -52,7 +52,7 @@ export function logout(): void {
 
 // 更新用户信息
 export async function updateUser(data: Partial<User>): Promise<ApiResponse<User>> {
-  return post<User>('/user/update', data);
+  return put<User>('/user/profile', data);
 }
 
 //导出为命名空间

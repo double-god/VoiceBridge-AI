@@ -34,10 +34,20 @@ Thumbs.db
 *.swo
 *.out
 tmp/
+
 # Python 虚拟环境
 venv/
 .venv/
 *.egg-info/
+
+# Go 编译产物
+backend/main
+backend/cmd/api_server/api_server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
 # ========== 数据集与媒体文件 (不上传) ==========
 # 视频源文件

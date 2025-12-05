@@ -51,17 +51,24 @@ services:
       exit 0;
       "
 
-
-
-      backend:
+  backend:
     build: ./backend
-    # ... 其他配置
+    container_name: voice_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - minio
+    networks:
+      - voice-net
+    env_file:
+      - .env
     environment:
-      # 👇 这一行非常重要！
-      # 它告诉 Docker：虽然 .env 里写的是 5433（给本地开发用的），
-      # 但你在容器里跑的时候，请强制使用 5432！
+      # 👇 覆盖 .env 中的配置，适配 Docker 环境
       - DB_PORT=5432
       - DB_HOST=db
+      - MINIO_ENDPOINT=minio:9000
 
 
 networks:

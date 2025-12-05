@@ -8,7 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, error, labelClassName, ...props }, ref) => {
+  ({ className, type, label, error, labelClassName, value, onChange, ...props }, ref) => {
     return (
       <div className="space-y-2">
         {label && (
@@ -18,8 +18,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           type={type}
+          value={value}
+          onChange={onChange}
           className={cn(
-            'flex h-[5vh] w-full rounded-full border border-gray-300 bg-white px-[2vh] py-[1vh] text-[1.6vh] ring-offset-white transition-all duration-200 file:border-0 file:bg-transparent file:text-[1.6vh] file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-[0.6vh] focus-visible:ring-blue-600/20 focus-visible:border-blue-600 focus-visible:border-[0.3vh] focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
+            'block h-[5vh] w-full rounded-full border border-gray-300 bg-white px-[2vh] py-[1vh] text-[1.6vh] text-gray-900 ring-offset-white transition-all duration-200 file:border-0 file:bg-transparent file:text-[1.6vh] file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-[0.6vh] focus-visible:ring-blue-600/20 focus-visible:border-blue-600 focus-visible:border-[0.3vh] focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-red-500 focus-visible:ring-red-500',
             className
           )}
