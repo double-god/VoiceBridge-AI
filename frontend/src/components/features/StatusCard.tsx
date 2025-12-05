@@ -9,14 +9,7 @@ interface StatusCardProps {
 }
 
 export function StatusCard({ recordId }: StatusCardProps) {
-  const {
-    status,
-    progress,
-    message,
-    result,
-    error,
-    isCompleted
-  } = useVoiceProgress(recordId);
+  const { status, progress, message, result, error, isCompleted } = useVoiceProgress(recordId);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -30,37 +23,41 @@ export function StatusCard({ recordId }: StatusCardProps) {
   if (!recordId) return null;
 
   return (
-    <Card className="w-full max-w-md mx-auto mt-6 shadow-lg overflow-hidden transition-all duration-500">
-      <CardHeader className={cn(
-        "border-b transition-colors duration-300",
-        status === 'completed' ? "bg-green-50" :
-        status === 'failed' ? "bg-red-50" : "bg-blue-50"
-      )}>
-        <div className="flex items-center gap-3">
+    <Card className="mx-auto w-full overflow-hidden shadow-2xl transition-all duration-500">
+      <CardHeader
+        className={cn(
+          'border-b-[0.3vh] transition-colors duration-300',
+          status === 'completed' ? 'bg-green-50' : status === 'failed' ? 'bg-red-50' : 'bg-blue-50'
+        )}
+      >
+        <div className="flex items-center gap-[2vh]">
           {status === 'completed' ? (
-            <CheckCircle2 className="w-6 h-6 text-green-600" />
+            <CheckCircle2 className="h-[3.5vh] w-[3.5vh] text-green-600" />
           ) : status === 'failed' ? (
-            <AlertCircle className="w-6 h-6 text-red-600" />
+            <AlertCircle className="h-[3.5vh] w-[3.5vh] text-red-600" />
           ) : (
-            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+            <Loader2 className="h-[3.5vh] w-[3.5vh] animate-spin text-blue-600" />
           )}
-          <CardTitle className="text-lg">
-            {status === 'completed' ? '处理完成' : 
-             status === 'failed' ? '处理失败' : 'AI 正在思考...'}
+          <CardTitle className="text-[2.5vh] md:text-[3vh]">
+            {status === 'completed'
+              ? '处理完成'
+              : status === 'failed'
+                ? '处理失败'
+                : 'AI 正在思考...'}
           </CardTitle>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-6 space-y-6">
+      <CardContent className="space-y-[3vh] pt-[3vh] md:space-y-[4vh] md:pt-[4vh]">
         {/* 进度条 */}
         {!isCompleted && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
+          <div className="space-y-[1.5vh]">
+            <div className="flex justify-between text-[1.8vh] text-gray-600 md:text-[2vh]">
               <span>{message}</span>
               <span className="font-medium">{progress}%</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div 
+            <div className="h-[1.2vh] overflow-hidden rounded-full bg-gray-100">
+              <div
                 className="h-full bg-blue-500 transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
               />
@@ -70,19 +67,19 @@ export function StatusCard({ recordId }: StatusCardProps) {
 
         {/* 错误信息 */}
         {status === 'failed' && (
-          <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">
+          <div className="rounded-[1.5vh] bg-red-50 p-[2.5vh] text-[1.8vh] text-red-700 md:text-[2vh]">
             {error || '发生未知错误'}
           </div>
         )}
 
         {/* 结果展示 */}
         {status === 'completed' && result && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <div className="animate-in fade-in slide-in-from-bottom-4 space-y-[2.5vh] duration-500 md:space-y-[3vh]">
+            <div className="space-y-[1.5vh]">
+              <span className="text-[1.4vh] font-semibold uppercase tracking-wider text-gray-400 md:text-[1.6vh]">
                 您的指令
               </span>
-              <p className="rounded-md bg-gray-50 p-3 text-gray-700">
+              <p className="rounded-[1.5vh] bg-gray-50 p-[2.5vh] text-[1.8vh] leading-relaxed text-gray-700 md:text-[2vh]">
                 {result.analysis_result?.refined_text ||
                   result.analysis_result?.asr_text ||
                   '无内容'}
@@ -90,11 +87,11 @@ export function StatusCard({ recordId }: StatusCardProps) {
             </div>
 
             {result.analysis_result?.tts_audio_url && (
-              <div className="pt-2">
+              <div className="pt-[1.5vh]">
                 <audio
                   ref={audioRef}
                   controls
-                  className="h-10 w-full"
+                  className="h-[5vh] w-full md:h-[6vh]"
                   src={result.analysis_result.tts_audio_url}
                 />
               </div>

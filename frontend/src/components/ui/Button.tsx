@@ -31,7 +31,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     // 基础样式
     const baseStyles =
-      'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white';
+      'inline-flex items-center justify-center rounded-full font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white';
 
     // 变体样式
     const variants = {
@@ -45,10 +45,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     // 尺寸样式
     const sizes = {
-      sm: 'h-8 px-3 text-xs',
-      md: 'h-10 px-4 py-2 text-sm',
-      lg: 'h-12 px-8 text-base',
-      icon: 'h-10 w-10',
+      sm: 'h-[4vh] px-[1.5vh] text-[1.4vh]',
+      md: 'h-[5vh] px-[2vh] text-[1.6vh]',
+      lg: 'h-[6vh] px-[4vh] text-[1.8vh]',
+      icon: 'h-[5vh] w-[5vh]',
     };
 
     return (
