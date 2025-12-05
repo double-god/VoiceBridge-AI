@@ -102,9 +102,21 @@ export function subscribeProgress(
   };
 }
 
+//取消任务
+export async function cancelVoiceTask(recordId: number): Promise<ApiResponse<{ message: string }>> {
+  return fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'}/voice/cancel/${recordId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    },
+  }).then(res => res.json());
+}
+
 //导出为命名空间
 export const voiceApi = {
   uploadAudio,
   getHistory,
   subscribeProgress,
+  cancelVoiceTask,
 };

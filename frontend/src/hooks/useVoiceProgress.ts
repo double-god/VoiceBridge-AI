@@ -19,6 +19,7 @@ const STATUS_PROGRESS_MAP: Record<VoiceProcessStatus, number> = {
   processing_tts: 80,
   completed: 100,
   failed: 0,
+  cancelled: 0,
   error: 0,
 };
 
@@ -30,6 +31,7 @@ const STATUS_MESSAGE_MAP: Record<VoiceProcessStatus, string> = {
   processing_tts: '语音合成中...',
   completed: '处理完成',
   failed: '处理失败',
+  cancelled: '已取消',
   error: '连接错误',
 };
 
@@ -55,7 +57,7 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
 
   //计算属性
   //是否完成，每次status变化时计算
-  const isCompleted = status === 'completed' || status === 'failed' || status === 'error';
+  const isCompleted = status === 'completed' || status === 'failed' || status === 'cancelled' || status === 'error';
 
   //关闭连接的函数
   /**
@@ -167,9 +169,13 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
           closeConnection();
         }
 
-        //处理失败（后端返回 'failed' 或 'error'）
+        //处理失败或取消（后端返回 'failed'、'cancelled' 或 'error'）
         if (data.status === 'failed' || data.status === 'error') {
           setError(data.msg || data.error || '未知错误');
+          closeConnection();
+        }
+        if (data.status === 'cancelled') {
+          setError('任务已被取消');
           closeConnection();
         }
       } catch (e) {
@@ -195,6 +201,28 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
     };
   }, [recordId, isCompleted, closeConnection]); //依赖数组
 
+  //取消任务的方法
+  const cancel = useCallback(async () => {
+    if (!recordId) return;
+    
+    try {
+      // 调用取消API
+      const { voiceApi } = await import('@/api');
+      await voiceApi.cancelVoiceTask(recordId);
+      
+      // 立即关闭SSE连接
+      closeConnection();
+      
+      // 更新状态
+      setStatus('cancelled');
+      setMessage('任务已取消');
+      setError('任务已被取消');
+    } catch (err) {
+      console.error('[取消任务失败]:', err);
+      setError('取消失败，请重试');
+    }
+  }, [recordId, closeConnection]);
+
   //返回值
   return {
     status,
@@ -204,6 +232,7 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
     error,
     isConnected,
     isCompleted,
+    cancel,
   };
 }
 

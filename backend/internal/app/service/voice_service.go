@@ -73,3 +73,26 @@ func (s *VoiceService) GetStatus(recordID uint) (*model.VoiceRecord, error) {
 func (s *VoiceService) GetHistory(userID uint, page, pageSize int) ([]model.VoiceRecord, int64, error) {
 	return s.repo.FindByUserID(userID, page, pageSize)
 }
+
+// CancelTask 取消处理任务
+func (s *VoiceService) CancelTask(recordID uint, userID uint) error {
+	// 查询记录
+	record, err := s.repo.FindByID(recordID)
+	if err != nil {
+		return err
+	}
+
+	// 验证所有权
+	if record.UserID != userID {
+		return fmt.Errorf("无权限取消该任务")
+	}
+
+	// 只允许取消处理中的任务
+	if record.Status == "completed" || record.Status == "failed" || record.Status == "cancelled" {
+		return fmt.Errorf("任务已结束，无法取消")
+	}
+
+	// 更新状态为 cancelled
+	record.Status = "cancelled"
+	return s.repo.Update(record)
+}
