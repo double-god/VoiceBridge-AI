@@ -10,10 +10,10 @@ client = Minio(
     settings.MINIO_ENDPOINT.replace("http://", "").replace("https://", ""),
     access_key=settings.MINIO_ROOT_USER,
     secret_key=settings.MINIO_ROOT_PASSWORD,
-    secure=settings.MINIO_USE_SSL.lower() == "true",
+    secure=settings.MINIO_SECURE,
 )
 
-BUCKET_NAME = settings.MINIO_BUCKET
+BUCKET_NAME = settings.MINIO_BUCKET_NAME
 
 
 def ensure_bucket():

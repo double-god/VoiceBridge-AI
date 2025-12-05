@@ -53,7 +53,10 @@ func main() {
 	}
 
 	// 初始化 MinIO
-	minioClient := storage.Init(cfg)
+	minioClient, err := storage.InitMinIO(cfg)
+	if err != nil {
+		logger.Log.Fatal("MinIO 初始化失败", zap.Error(err))
+	}
 	logger.Log.Info("MinIO 连接建立成功", zap.String("bucket", cfg.Minio.BucketName))
 
 	// 依赖注入
