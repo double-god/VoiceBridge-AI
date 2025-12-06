@@ -4,6 +4,38 @@
 >
 > 专为构音障碍（Dysarthria）患者打造的端云协同 AI 辅助沟通 Agent。
 
+## 📑 目录导航
+
+- [📖 项目简介](#-项目简介-introduction)
+- [✨ 核心功能](#-核心功能-features)
+- [🏗️ 系统架构](#️-系统架构-architecture)
+- [🛠️ 技术栈](#️-技术栈-tech-stack)
+- [🚀 快速开始](#-快速开始-quick-start)
+  - [前置要求](#前置要求)
+  - [环境配置](#1-环境配置)
+  - [Docker 启动](#2-使用-docker-compose-启动-推荐)
+  - [本地开发](#3-本地开发模式)
+- [📂 目录结构](#-目录结构)
+- [📖 详细使用指南](#-详细使用指南)
+  - [用户端操作指南](#用户端操作指南)
+    - [注册与登录](#1-注册与登录)
+    - [配置个人画像](#2-配置个人画像)
+    - [使用语音助手](#3-使用语音助手)
+  - [管理员/开发者指南](#管理员开发者指南)
+    - [服务管理](#1-服务管理)
+    - [数据库管理](#2-数据库管理)
+    - [MinIO 存储管理](#3-minio-存储管理)
+    - [前端开发](#4-前端开发)
+    - [后端开发](#5-后端开发)
+    - [AI Agent 开发](#6-ai-agent-开发)
+    - [测试脚本使用](#7-测试脚本使用)
+    - [工具脚本使用](#8-工具脚本使用)
+    - [环境变量配置](#9-环境变量配置说明)
+    - [常见问题排查](#10-常见问题排查)
+- [🧪 数据集处理](#-数据集处理-data-pipeline)
+- [🤝 贡献指南](#-贡献指南)
+- [📄 许可证](#-许可证)
+
 ## 📖 项目简介 (Introduction)
 
 **VoiceBridge AI** 旨在解决构音障碍患者（如脑卒中老人、脑瘫患者）因发音肌肉失调导致口齿不清，无法被传统语音识别工具理解的痛点。
@@ -183,10 +215,10 @@ pnpm dev
 
 ```bash
 cd ai_agent
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+python3 main.py
 ```
 
 ## 📂 目录结构
@@ -294,7 +326,7 @@ voicebridge-ai/
 │   └── requirements.txt      # Python 依赖
 │
 ├── deploy/                   # 部署配置文件
-│   │           # 反向代理/SSE/静态文件配置
+│   │
 │   └── prometheus/           # 监控配置 (预留)
 │
 ├── tests/                    # 测试文件目录
@@ -331,7 +363,7 @@ voicebridge-ai/
 
 1. 访问 `http://localhost/login`
 2. 首次使用点击"注册"按钮
-3. 填写用户名和密码(密码至少6位)
+3. 填写用户名和密码(密码至少 6 位)
 4. 注册成功后自动跳转到登录页
 5. 输入凭证登录系统
 
@@ -341,6 +373,7 @@ voicebridge-ai/
 个人画像帮助 AI 更准确地理解患者的表达意图。例如，"拿那个...那个药"，AI 会根据患者的常用药物列表推断具体是哪种药。
 
 **配置步骤：**
+
 1. 点击顶部导航栏的"个人信息"按钮
 2. 填写以下信息：
    - **姓名**: 患者真实姓名
@@ -353,43 +386,38 @@ voicebridge-ai/
 #### 3. 使用语音助手
 
 **录音流程：**
+
 1. 返回首页(点击"语音助手"按钮)
 2. 点击中央的大麦克风按钮开始录音
-3. 对着设备清晰说话(支持最长90秒)
+3. 对着设备清晰说话(支持最长 90 秒)
 4. 再次点击麦克风或等待自动停止
 5. 等待 AI 处理(会显示实时进度)
 
 **处理过程：**
+
 - **语音识别(10-30%)**: AI 正在将您的声音转为文字
 - **意图理解(30-70%)**: AI 正在分析您想表达的意思
 - **语音合成(70-100%)**: AI 正在生成清晰的语音
 
 **结果展示：**
+
 - **Accept(接受)**: AI 理解了您的意图,显示"您的指令"和清晰的表达文本,自动播放语音
 - **Boundary(确认)**: AI 不太确定,显示"AI 确认"和询问文本,如"您想表达的意思是否为：去喝水？"
 - **Reject(拒绝)**: AI 无法理解,显示"AI 反馈"和提示"抱歉,我不理解您说的话。您可以换一种方式再说一遍吗？"
 
-**操作提示：**
-- 点击音频播放器可以重听结果
-- 处理过程中可以点击"取消"按钮中止
-- 如果环境嘈杂,建议靠近麦克风说话
-
-#### 4. 查看历史记录
-
-1. 点击顶部导航栏的"历史记录"(如已实现)
-2. 浏览之前的语音交互记录
-3. 可以回放历史语音结果
 
 ### 管理员/开发者指南
 
 #### 1. 服务管理
 
 **查看所有服务状态：**
+
 ```bash
 docker compose ps
 ```
 
 **查看服务日志：**
+
 ```bash
 # 查看所有服务日志
 docker compose logs -f
@@ -402,6 +430,7 @@ docker compose logs -f postgres    # 数据库日志
 ```
 
 **重启服务：**
+
 ```bash
 # 重启单个服务
 docker compose restart ai_agent
@@ -419,11 +448,13 @@ docker compose up --build -d
 #### 2. 数据库管理
 
 **连接数据库：**
+
 ```bash
 docker exec -it voicebridge_postgres psql -U nainong -d nainong
 ```
 
 **常用查询：**
+
 ```sql
 -- 查看所有用户
 SELECT id, username, name, age FROM users;
@@ -432,10 +463,10 @@ SELECT id, username, name, age FROM users;
 SELECT id, status, decision, created_at FROM voice_records ORDER BY id DESC LIMIT 10;
 
 -- 查看分析结果
-SELECT id, decision, confidence, 
+SELECT id, decision, confidence,
        LEFT(asr_text, 50) as asr,
        LEFT(response_text, 50) as response
-FROM analysis_results 
+FROM analysis_results
 ORDER BY id DESC LIMIT 10;
 
 -- 查看特定用户的记录
@@ -449,11 +480,13 @@ ORDER BY vr.id DESC;
 #### 3. MinIO 存储管理
 
 **访问 MinIO 控制台：**
+
 1. 打开 `http://localhost:9001`
 2. 用户名: `minioadmin`
 3. 密码: 查看 `.env` 文件中的 `MINIO_ROOT_PASSWORD`
 
 **查看存储文件：**
+
 - Bucket 名称: `voicebridge`
 - 语音文件路径: `voices/YYYY/MM/DD/uuid-timestamp.webm`
 - TTS 文件路径: `tts/{record_id}_tts_{hash}.wav`
@@ -461,11 +494,13 @@ ORDER BY vr.id DESC;
 #### 4. 前端开发
 
 **修改前端代码后重新构建：**
+
 ```bash
 docker compose build frontend && docker compose up -d frontend
 ```
 
 **本地开发模式(热更新)：**
+
 ```bash
 cd frontend
 pnpm install
@@ -476,11 +511,13 @@ pnpm dev
 #### 5. 后端开发
 
 **修改后端代码后重新构建：**
+
 ```bash
 docker compose build backend && docker compose up -d backend
 ```
 
 **本地开发模式：**
+
 ```bash
 cd backend
 go run cmd/api_server/main.go
@@ -490,22 +527,25 @@ go run cmd/api_server/main.go
 #### 6. AI Agent 开发
 
 **修改 AI Agent 后重启：**
+
 ```bash
 docker compose restart ai_agent
 ```
 
 **查看 AI Agent 详细日志：**
+
 ```bash
 docker compose logs -f ai_agent | grep -E "Pipeline|ASR|LLM|TTS|Error"
 ```
 
 **本地开发模式：**
+
 ```bash
 cd ai_agent
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python main.py
+python3 main.py
 # 服务运行在 http://localhost:8000
 # 访问 Swagger 文档: http://localhost:8000/docs
 ```
@@ -513,38 +553,55 @@ python main.py
 #### 7. 测试脚本使用
 
 **快速测试上传功能：**
+
 ```bash
-python tests/scripts/test_upload_quick.py
+python3 tests/scripts/test_upload_quick.py
 ```
 
 **测试 ASR + LLM 流程：**
+
 ```bash
-python tests/scripts/test_asr_llm.py
+python3 tests/scripts/test_asr_llm.py
 ```
 
 **测试完整流程：**
+
 ```bash
-python tests/scripts/test_full_pipeline.py
+python3 tests/scripts/test_full_pipeline.py
 ```
 
 **测试 TTS 合成：**
+
 ```bash
-python tests/scripts/test_tts.py
+python3 tests/scripts/test_tts.py
+```
+
+**运行所有集成测试：**
+
+```bash
+# 如果需要批量运行多个测试
+for test in tests/scripts/test_*.py; do
+  echo "Running $test..."
+  python3 "$test" || echo "Test failed: $test"
+done
 ```
 
 #### 8. 工具脚本使用
 
 **检查代理配置：**
+
 ```bash
 bash scripts/check_proxy.sh
 ```
 
 **检查 TTS 服务状态：**
+
 ```bash
 bash scripts/check_tts_status.sh
 ```
 
 **快速部署(一键重启所有服务)：**
+
 ```bash
 bash scripts/quick_deploy.sh
 ```
@@ -568,8 +625,8 @@ DB_NAME=nainong
 
 # === MinIO 配置 ===
 MINIO_ENDPOINT=minio:9000        # Docker 环境用 minio:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
+MINIO_ACCESS_KEY=xxxxxx
+MINIO_SECRET_KEY=xxxxxx
 MINIO_BUCKET=voicebridge
 MINIO_USE_SSL=false
 
@@ -585,25 +642,30 @@ FRONTEND_PORT=80
 #### 10. 常见问题排查
 
 **问题: AI Agent 报错 "LLM API Key not configured"**
+
 - 解决: 检查 `.env` 文件中 `LLM_API_KEY` 是否正确配置
 - 重启服务: `docker compose restart ai_agent`
 
 **问题: 前端无法连接后端**
+
 - 检查所有容器是否运行: `docker compose ps`
 - 检查后端日志: `docker compose logs backend`
 - 确认端口映射正确: 后端应在 8080, 前端在 80
 
 **问题: 语音识别结果不准确**
+
 - 确保录音环境安静
 - 尽量靠近麦克风说话
 - 配置完整的个人画像信息
 
 **问题: 数据库连接失败**
+
 - 检查 PostgreSQL 容器状态: `docker compose ps postgres`
 - 查看数据库日志: `docker compose logs postgres`
 - 确认 `.env` 中数据库配置正确
 
 **问题: MinIO 无法访问文件**
+
 - 检查 MinIO 容器状态: `docker compose ps minio`
 - 访问 MinIO 控制台检查 bucket 权限
 - 确认 bucket 设置为 public download
@@ -619,7 +681,7 @@ FRONTEND_PORT=80
 3.  运行流水线：
     ```bash
     cd data_pipeline
-    python main_pipeline.py
+    python3 main_pipeline.py
     ```
 4.  生成的标准 JSON 数据集将自动同步至 `ai_agent/data/demo/`
 
@@ -647,7 +709,7 @@ FRONTEND_PORT=80
 
 ## 🤝 贡献指南
 
-欢迎提交 Issue 和 Pull Request！
+欢迎提交 Issue 和 Pull Request。我是笨蛋，求指教。
 特别是针对以下方面的改进：
 
 - 更多的方言支持 (ASR/LLM Prompt 优化)。
