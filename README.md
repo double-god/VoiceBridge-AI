@@ -84,7 +84,7 @@ graph TD
         Pipeline[异步任务流]
         Whisper[ASR 语音转写]
         LLM[LLM 意图推理]
-        TTS[Edge-TTS 合成]
+        TTS[cosyvoice TTS 合成]
     end
 
     User --> UI
@@ -97,8 +97,8 @@ graph TD
     Pipeline -->|6. ASR转写| Whisper
     Pipeline -->|7. 获取画像| Postgres
     Pipeline -->|8. 推理| LLM
-    Pipeline -->|9. 合成语音| TTS
-    TTS -->|10. 上传结果| MinIO
+    Pipeline -->|9. 合成语音| cosyvoice TTS
+    cosyvoice TTS -->|10. 上传结果| MinIO
 
     Pipeline -.->|状态回调| Postgres
     SSE_Server -.->|轮询/推送进度| SSE_Client
