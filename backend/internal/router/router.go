@@ -49,6 +49,8 @@ func Setup(
 				voiceGroup.GET("/history", voiceH.GetHistory)
 				// SSE 接口
 				voiceGroup.GET("/status/stream/:id", voiceH.StreamStatus)
+				// 取消任务
+				voiceGroup.DELETE("/cancel/:id", voiceH.CancelTask)
 			}
 		}
 	}

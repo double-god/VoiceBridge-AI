@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { useVoiceProgress } from '@/hooks';
 import { cn } from '@/lib/utils';
 
@@ -9,7 +10,7 @@ interface StatusCardProps {
 }
 
 export function StatusCard({ recordId }: StatusCardProps) {
-  const { status, progress, message, result, error, isCompleted } = useVoiceProgress(recordId);
+  const { status, progress, message, result, error, isCompleted, cancel } = useVoiceProgress(recordId);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -27,24 +28,42 @@ export function StatusCard({ recordId }: StatusCardProps) {
       <CardHeader
         className={cn(
           'border-b-[0.3vh] transition-colors duration-300',
-          status === 'completed' ? 'bg-green-50' : status === 'failed' ? 'bg-red-50' : 'bg-blue-50'
+          status === 'completed' ? 'bg-green-50' : 
+          status === 'failed' || status === 'cancelled' ? 'bg-red-50' : 
+          'bg-blue-50'
         )}
       >
-        <div className="flex items-center gap-[2vh]">
-          {status === 'completed' ? (
-            <CheckCircle2 className="h-[3.5vh] w-[3.5vh] text-green-600" />
-          ) : status === 'failed' ? (
-            <AlertCircle className="h-[3.5vh] w-[3.5vh] text-red-600" />
-          ) : (
-            <Loader2 className="h-[3.5vh] w-[3.5vh] animate-spin text-blue-600" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-[2vh]">
+            {status === 'completed' ? (
+              <CheckCircle2 className="h-[3.5vh] w-[3.5vh] text-green-600" />
+            ) : status === 'failed' || status === 'cancelled' ? (
+              <AlertCircle className="h-[3.5vh] w-[3.5vh] text-red-600" />
+            ) : (
+              <Loader2 className="h-[3.5vh] w-[3.5vh] animate-spin text-blue-600" />
+            )}
+            <CardTitle className="text-[2.5vh] md:text-[3vh]">
+              {status === 'completed'
+                ? '处理完成'
+                : status === 'failed'
+                  ? '处理失败'
+                  : status === 'cancelled'
+                    ? '已取消'
+                    : 'AI 正在思考...'}
+            </CardTitle>
+          </div>
+          {/* 处理中时显示取消按钮 */}
+          {!isCompleted && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={cancel}
+              className="h-[4vh] gap-[0.8vh] text-[1.6vh] text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              <X className="h-[2vh] w-[2vh]" />
+              取消
+            </Button>
           )}
-          <CardTitle className="text-[2.5vh] md:text-[3vh]">
-            {status === 'completed'
-              ? '处理完成'
-              : status === 'failed'
-                ? '处理失败'
-                : 'AI 正在思考...'}
-          </CardTitle>
         </div>
       </CardHeader>
 
@@ -65,10 +84,10 @@ export function StatusCard({ recordId }: StatusCardProps) {
           </div>
         )}
 
-        {/* 错误信息 */}
-        {status === 'failed' && (
+        {/* 错误信息或取消信息 */}
+        {(status === 'failed' || status === 'cancelled') && (
           <div className="rounded-[1.5vh] bg-red-50 p-[2.5vh] text-[1.8vh] text-red-700 md:text-[2vh]">
-            {error || '发生未知错误'}
+            {error || (status === 'cancelled' ? '任务已被取消' : '发生未知错误')}
           </div>
         )}
 
@@ -77,10 +96,15 @@ export function StatusCard({ recordId }: StatusCardProps) {
           <div className="animate-in fade-in slide-in-from-bottom-4 space-y-[2.5vh] duration-500 md:space-y-[3vh]">
             <div className="space-y-[1.5vh]">
               <span className="text-[1.4vh] font-semibold uppercase tracking-wider text-gray-400 md:text-[1.6vh]">
-                您的指令
+                {
+                  result.analysis_result?.decision === 'boundary' ? 'AI 确认' :
+                  result.analysis_result?.decision === 'reject' ? 'AI 反馈' :
+                  '您的指令'
+                }
               </span>
               <p className="rounded-[1.5vh] bg-gray-50 p-[2.5vh] text-[1.8vh] leading-relaxed text-gray-700 md:text-[2vh]">
-                {result.analysis_result?.refined_text ||
+                {result.analysis_result?.response_text ||
+                  result.analysis_result?.refined_text ||
                   result.analysis_result?.asr_text ||
                   '无内容'}
               </p>

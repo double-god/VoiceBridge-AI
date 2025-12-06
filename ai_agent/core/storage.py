@@ -10,10 +10,10 @@ client = Minio(
     settings.MINIO_ENDPOINT.replace("http://", "").replace("https://", ""),
     access_key=settings.MINIO_ROOT_USER,
     secret_key=settings.MINIO_ROOT_PASSWORD,
-    secure=settings.MINIO_USE_SSL.lower() == "true",
+    secure=settings.MINIO_SECURE,
 )
 
-BUCKET_NAME = settings.MINIO_BUCKET
+BUCKET_NAME = settings.MINIO_BUCKET_NAME
 
 
 def ensure_bucket():
@@ -58,7 +58,7 @@ def upload_file(local_path: str, object_name: str = None) -> str:
         local_path: 本地文件路径
         object_name: MinIO 对象名称, 空则使用文件名
     Returns:
-        MinIO 对象 URL
+        MinIO 对象 URL (前端可访问的代理地址)
     """
     ensure_bucket()
 
@@ -67,7 +67,8 @@ def upload_file(local_path: str, object_name: str = None) -> str:
 
     try:
         client.fput_object(BUCKET_NAME, object_name, local_path)
-        object_url = f"{settings.MINIO_ENDPOINT}/{BUCKET_NAME}/{object_name}"
+        # 返回前端可访问的 URL (通过 Nginx /minio-api/ 代理)
+        object_url = f"/minio-api/{BUCKET_NAME}/{object_name}"
         print(f"[MinIO] 上传文件: {local_path} -> {object_url}")
         return object_url
     except S3Error as e:

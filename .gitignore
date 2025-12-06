@@ -77,3 +77,6 @@ ai_agent/data/grand_round_dataset.json
 **/*.wav
 **/*.mp3
 **/*.flac
+
+# Docker 配置
+/etc/docker/daemon.json

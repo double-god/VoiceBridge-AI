@@ -113,6 +113,7 @@ func (h *VoiceHandler) StreamStatus(c *gin.Context) {
 			if record.Status == "completed" && record.AnalysisResult.ID != 0 {
 				data["asr_text"] = record.AnalysisResult.AsrText
 				data["refined_text"] = record.AnalysisResult.RefinedText
+				data["response_text"] = record.AnalysisResult.ResponseText
 				data["tts_url"] = record.AnalysisResult.TtsAudioUrl
 				data["decision"] = record.AnalysisResult.Decision
 			}
@@ -152,6 +153,36 @@ func (h *VoiceHandler) GetHistory(c *gin.Context) {
 	})
 }
 
+// CancelTask 取消任务接口
+func (h *VoiceHandler) CancelTask(c *gin.Context) {
+	// 获取 UserID
+	uidVal, exists := c.Get(constant.CtxUserID)
+	if !exists {
+		response.Error(c, http.StatusUnauthorized, errcode.Unauthorized)
+		return
+	}
+	uid := uidVal.(uint)
+
+	// 获取 record ID
+	idStr := c.Param("id")
+	recordID, err := strconv.Atoi(idStr)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, errcode.InvalidParams)
+		return
+	}
+
+	// 调用 Service
+	if err := h.svc.CancelTask(uint(recordID), uid); err != nil {
+		logger.Log.Error("取消任务失败", zap.Error(err))
+		response.Error(c, http.StatusBadRequest, errcode.ServerError)
+		return
+	}
+
+	response.Success(c, map[string]interface{}{
+		"message": "任务已取消",
+	})
+}
+
 // 算进度条
 func calculateProgress(status string) int {
 	switch status {
@@ -165,6 +196,8 @@ func calculateProgress(status string) int {
 		return 80
 	case "completed":
 		return 100
+	case "cancelled":
+		return 0
 	default:
 		return 0
 	}

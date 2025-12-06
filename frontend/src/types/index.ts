@@ -28,6 +28,7 @@ export type VoiceStatus =
   | 'processing_tts'
   | 'completed'
   | 'failed'
+  | 'cancelled'
   | 'error';
 
 // 语音记录模型
@@ -52,6 +53,7 @@ export interface AnalysisResult {
 
   asr_text: string;
   refined_text: string;
+  response_text?: string; // 根据decision生成的用户友好提示
 
   confidence: number;
   decision: DecisionType;
@@ -75,6 +77,7 @@ export type VoiceProcessStatus =
   | 'processing_tts' // 语音合成中
   | 'completed' // 处理完成
   | 'failed' // 处理失败
+  | 'cancelled' // 已取消
   | 'error'; // 连接/请求错误
 
 //SSE进度事件
@@ -86,6 +89,7 @@ export interface ProgressEvent {
   // 完成时后端返回的额外字段
   asr_text?: string;
   refined_text?: string;
+  response_text?: string; // 根据decision生成的响应文本
   tts_url?: string;
   decision?: string;
   // 错误时
@@ -103,4 +107,5 @@ export interface UseVoiceProgressReturn {
   result: VoiceRecord | null;
   isConnected: boolean;
   isCompleted: boolean;
+  cancel: () => Promise<void>; // 取消方法
 }

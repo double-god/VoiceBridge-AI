@@ -18,23 +18,23 @@ export default function MainLayout() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       {/* 顶部导航栏 */}
       <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60">
-        <div className="mx-auto flex h-16 w-full items-center justify-between px-4 lg:h-32 lg:px-[8vw] xl:h-40 xl:px-[10vw] 2xl:h-44 2xl:px-[12vw]">
-          <div className="flex items-center gap-2 lg:gap-6 xl:gap-8 2xl:gap-10">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-white shadow-lg shadow-blue-200 lg:h-24 lg:w-24 lg:rounded-2xl lg:text-4xl xl:h-28 xl:w-28 xl:text-5xl 2xl:h-32 2xl:w-32 2xl:text-6xl">
+        <div className="mx-auto flex h-16 w-full items-center justify-between px-4 lg:h-20 lg:px-6 xl:h-24 xl:px-8 2xl:h-28 2xl:px-10">
+          <div className="flex items-center gap-2 lg:gap-4 xl:gap-5 2xl:gap-6">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-white shadow-lg shadow-blue-200 lg:h-14 lg:w-14 lg:rounded-xl lg:text-2xl xl:h-16 xl:w-16 xl:text-3xl 2xl:h-18 2xl:w-18 2xl:text-4xl">
               VB
             </div>
-            <span className="hidden bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-xl font-bold text-transparent md:block lg:text-5xl xl:text-6xl 2xl:text-7xl">
+            <span className="hidden bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-xl font-bold text-transparent md:block lg:text-3xl xl:text-4xl 2xl:text-5xl">
               VoiceBridge
             </span>
           </div>
 
-          <nav className="flex items-center gap-3 md:gap-6 lg:gap-12 xl:gap-14 2xl:gap-16">
+          <nav className="flex items-center gap-2 md:gap-4 lg:gap-4 xl:gap-5 2xl:gap-6">
             <Link to="/">
               <Button
                 variant={isActive('/') ? 'primary' : 'ghost'}
                 size="sm"
-                className="whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 lg:h-24 lg:min-w-[15vw] lg:px-14 lg:text-3xl xl:h-28 xl:min-w-[16vw] xl:px-16 xl:text-4xl 2xl:h-32 2xl:min-w-[18vw] 2xl:px-20 2xl:text-5xl"
-                leftIcon={<Mic className="h-4 w-4 flex-shrink-0 lg:h-12 lg:w-12 xl:h-14 xl:w-14 2xl:h-16 2xl:w-16" />}
+                className="whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 lg:h-14 lg:px-6 lg:text-xl xl:h-16 xl:px-8 xl:text-2xl 2xl:h-18 2xl:px-10 2xl:text-3xl"
+                leftIcon={<Mic className="h-4 w-4 flex-shrink-0 lg:h-6 lg:w-6 xl:h-7 xl:w-7 2xl:h-8 2xl:w-8" />}
               >
                 语音助手
               </Button>
@@ -43,20 +43,20 @@ export default function MainLayout() {
               <Button
                 variant={isActive('/profile') ? 'primary' : 'ghost'}
                 size="sm"
-                className="whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 lg:h-24 lg:min-w-[15vw] lg:px-14 lg:text-3xl xl:h-28 xl:min-w-[16vw] xl:px-16 xl:text-4xl 2xl:h-32 2xl:min-w-[18vw] 2xl:px-20 2xl:text-5xl"
-                leftIcon={<User className="h-4 w-4 flex-shrink-0 lg:h-12 lg:w-12 xl:h-14 xl:w-14 2xl:h-16 2xl:w-16" />}
+                className="whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 lg:h-14 lg:px-6 lg:text-xl xl:h-16 xl:px-8 xl:text-2xl 2xl:h-18 2xl:px-10 2xl:text-3xl"
+                leftIcon={<User className="h-4 w-4 flex-shrink-0 lg:h-6 lg:w-6 xl:h-7 xl:w-7 2xl:h-8 2xl:w-8" />}
               >
                 个人信息
               </Button>
             </Link>
-            <div className="mx-2 h-6 w-px bg-gray-200 lg:mx-6 lg:h-20 xl:h-24 2xl:h-28" />
+            <div className="mx-1 h-6 w-px bg-gray-200 lg:mx-2 lg:h-10 xl:h-12 2xl:h-14" />
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="text-gray-500 hover:bg-red-50 hover:text-red-600 lg:h-22 lg:w-22 xl:h-24 xl:w-24 2xl:h-28 2xl:w-28"
+              className="text-gray-500 hover:bg-red-50 hover:text-red-600 lg:h-14 lg:w-14 xl:h-16 xl:w-16 2xl:h-18 2xl:w-18"
             >
-              <LogOut className="h-4 w-4 lg:h-10 lg:w-10 xl:h-12 xl:w-12 2xl:h-14 2xl:w-14" />
+              <LogOut className="h-4 w-4 lg:h-6 lg:w-6 xl:h-7 xl:w-7 2xl:h-8 2xl:w-8" />
             </Button>
           </nav>
         </div>

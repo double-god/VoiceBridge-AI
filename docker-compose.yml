@@ -1,82 +1,166 @@
-version: '3.8'
-
 services:
-  db:
+  # PostgreSQL 数据库
+  postgres:
     image: postgres:15-alpine
-    container_name: voice_db
-    restart: always
+    container_name: voicebridge_postgres
     environment:
-      # 从 .env 文件读取变量
-      POSTGRES_USER: ${DB_USER}   #账号
-      POSTGRES_PASSWORD: ${DB_PASSWORD}   #密码
-      POSTGRES_DB: ${DB_NAME}   #数据库名
+      POSTGRES_USER: ${POSTGRES_USER:-nainong}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-nainong}
     ports:
       - "5433:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - voice-net
+      - voicebridge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nainong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # 对象存储服务 MinIO
+  # MinIO 对象存储
   minio:
-    image: minio/minio:latest
-    container_name: voice_minio
-    restart: always
-    command: server /data --console-address ":9001"  # 启动 MinIO 并开启控制台
-    ports:  # 映射 MinIO 端口
+    image: minio/minio
+    container_name: voicebridge_minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
       - "9000:9000"
       - "9001:9001"
-    environment:
-      # 从 .env 文件读取变量
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
+    command: server /data --console-address ":9001"
     networks:
-      - voice-net
+      - voicebridge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
-  # MinIO 初始化脚本
-  createbuckets:
+  # MinIO 初始化服务 - 创建 Bucket
+  minio-init:
     image: minio/mc
+    container_name: voicebridge_minio_init
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     networks:
-      - voice-net
-    # 也使用了环境变量
-    entrypoint: >
+      - voicebridge-network
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: >
       /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc mb myminio/voices;
-      /usr/bin/mc anonymous set public myminio/voices;
-      exit 0;
+      sleep 5;
+      mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc mb myminio/voicebridge --ignore-existing;
+      mc anonymous set download myminio/voicebridge;
+      echo 'Bucket created successfully';
       "
 
+  # Go 后端服务
   backend:
-    build: ./backend
-    container_name: voice_backend
-    restart: always
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: voicebridge_backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-nainong}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB:-nainong}
+      JWT_SECRET: ${JWT_SECRET}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: voicebridge
+      MINIO_USE_SSL: "false"
+      AI_AGENT_SERVICE_URL: http://ai_agent:8000
     ports:
       - "8080:8080"
     depends_on:
-      - db
-      - minio
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
-      - voice-net
-    env_file:
-      - .env
-    environment:
-      # 👇 覆盖 .env 中的配置，适配 Docker 环境
-      - DB_PORT=5432
-      - DB_HOST=db
-      - MINIO_ENDPOINT=minio:9000
+      - voicebridge-network
+    restart: unless-stopped
 
+  # Python AI Agent
+  ai_agent:
+    build:
+      context: ./ai_agent
+      dockerfile: Dockerfile
+    container_name: voicebridge_ai_agent
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-nainong}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB:-nainong}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_NAME: voicebridge
+      MINIO_SECURE: "false"
+      WHISPER_MODEL: base
+      AI_AGENT_LLM_API_URL: ${AI_AGENT_LLM_API_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}
+      AI_AGENT_LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL_NAME: qwen3-max
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai_agent:/app:rw  # 挂载代码目录，方便开发调试
+      - cosy_models:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    networks:
+      - voicebridge-network
+    restart: unless-stopped
+
+  # React 前端 (生产模式)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: voicebridge_frontend
+    networks:
+      - voicebridge-network
+    restart: unless-stopped
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: voicebridge_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+      - ai_agent
+    networks:
+      - voicebridge-network
+    restart: unless-stopped
 
 networks:
-  voice-net:
+  voicebridge-network:
     driver: bridge
 
 volumes:
-  pg_data:
+  postgres_data:
   minio_data:
-
-
+  cosy_models:  # CosyVoice 模型持久化存储

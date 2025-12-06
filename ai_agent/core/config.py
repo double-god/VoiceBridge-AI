@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     AI_AGENT_LLM_API_KEY: str = os.getenv("AI_AGENT_LLM_API_KEY", "")
     LLM_MODEL_NAME: str = os.getenv("LLM_MODEL_NAME", "qwen3-max")
 
+    @property
+    def DATABASE_URL(self) -> str:
+        """构建数据库连接 URL"""
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
     class Config:
         env_file = "../.env"  # 自动读取根目录 .env
         extra = "ignore"
