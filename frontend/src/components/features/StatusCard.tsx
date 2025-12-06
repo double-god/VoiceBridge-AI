@@ -96,10 +96,15 @@ export function StatusCard({ recordId }: StatusCardProps) {
           <div className="animate-in fade-in slide-in-from-bottom-4 space-y-[2.5vh] duration-500 md:space-y-[3vh]">
             <div className="space-y-[1.5vh]">
               <span className="text-[1.4vh] font-semibold uppercase tracking-wider text-gray-400 md:text-[1.6vh]">
-                您的指令
+                {
+                  result.analysis_result?.decision === 'boundary' ? 'AI 确认' :
+                  result.analysis_result?.decision === 'reject' ? 'AI 反馈' :
+                  '您的指令'
+                }
               </span>
               <p className="rounded-[1.5vh] bg-gray-50 p-[2.5vh] text-[1.8vh] leading-relaxed text-gray-700 md:text-[2vh]">
-                {result.analysis_result?.refined_text ||
+                {result.analysis_result?.response_text ||
+                  result.analysis_result?.refined_text ||
                   result.analysis_result?.asr_text ||
                   '无内容'}
               </p>

@@ -53,6 +53,7 @@ export interface AnalysisResult {
 
   asr_text: string;
   refined_text: string;
+  response_text?: string; // 根据decision生成的用户友好提示
 
   confidence: number;
   decision: DecisionType;
@@ -88,6 +89,7 @@ export interface ProgressEvent {
   // 完成时后端返回的额外字段
   asr_text?: string;
   refined_text?: string;
+  response_text?: string; // 根据decision生成的响应文本
   tts_url?: string;
   decision?: string;
   // 错误时

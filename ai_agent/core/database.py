@@ -57,6 +57,7 @@ class AnalysisResult(Base):
     voice_record_id = Column(Integer)
     asr_text = Column(Text)
     refined_text = Column(Text)
+    response_text = Column(Text, nullable=True)  # 新增: 根据 decision 生成的响应文本
     confidence = Column(Float)
     decision = Column(String)
     tts_audio_url = Column(String)
@@ -123,6 +124,7 @@ def save_analysis_result(
     voice_record_id: int,
     asr_text: str,
     refined_text: str,
+    response_text: str,
     confidence: float,
     decision: str,
     tts_audio_url: str,
@@ -135,6 +137,7 @@ def save_analysis_result(
         voice_record_id: 语音记录 ID
         asr_text: ASR 转录文本
         refined_text: LLM 精炼后的文本
+        response_text: 根据 decision 生成的响应文本
         confidence: 置信度
         decision: 决策 (accept/boundary/reject)
         tts_audio_url: TTS 音频 URL
@@ -153,6 +156,7 @@ def save_analysis_result(
         # 更新已有记录
         result.asr_text = asr_text
         result.refined_text = refined_text
+        result.response_text = response_text
         result.confidence = confidence
         result.decision = decision
         result.tts_audio_url = tts_audio_url
@@ -163,6 +167,7 @@ def save_analysis_result(
             voice_record_id=voice_record_id,
             asr_text=asr_text,
             refined_text=refined_text,
+            response_text=response_text,
             confidence=confidence,
             decision=decision,
             tts_audio_url=tts_audio_url,

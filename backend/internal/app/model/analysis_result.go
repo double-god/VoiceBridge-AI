@@ -15,6 +15,9 @@ type AnalysisResult struct {
 	// accept直接播报, boundary询问确认, reject拒识别
 	Decision string `gorm:"type:varchar(20)" json:"decision"`
 
+	// 响应文本 (根据decision生成的用户友好提示)
+	ResponseText string `gorm:"type:text" json:"response_text"`
+
 	// TTS 播报
 	TtsAudioUrl string `gorm:"type:varchar(255)" json:"tts_audio_url"`
 }

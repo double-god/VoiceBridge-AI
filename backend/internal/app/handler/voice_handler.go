@@ -113,6 +113,7 @@ func (h *VoiceHandler) StreamStatus(c *gin.Context) {
 			if record.Status == "completed" && record.AnalysisResult.ID != 0 {
 				data["asr_text"] = record.AnalysisResult.AsrText
 				data["refined_text"] = record.AnalysisResult.RefinedText
+				data["response_text"] = record.AnalysisResult.ResponseText
 				data["tts_url"] = record.AnalysisResult.TtsAudioUrl
 				data["decision"] = record.AnalysisResult.Decision
 			}

@@ -63,6 +63,7 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
         confidence = llm_result.get("confidence", 0)
         decision = llm_result.get("decision", "reject")
         reason = llm_result.get("reason", "")
+        response_text = llm_result.get("response_text", refined_text)  # 获取响应文本
 
         # 更新状态, 准备 TTS
         update_record_status(
@@ -75,20 +76,18 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
             reason=reason,
         )
 
-        # 执行 TTS (当 decision 为 accept
-        tts_url = ""
-        if decision == "accept":
-            print(f"[Pipeline] 执行 TTS...")
-            temp_dir = tempfile.mkdtemp()
-            tts_local_path = await tts_cosy.tts_edge(refined_text, temp_dir)
-            temp_files.append(tts_local_path)
+        # 执行 TTS (所有决策类型都生成语音响应)
+        print(f"[Pipeline] 执行 TTS (response_text: {response_text[:50]}...)...")
+        temp_dir = tempfile.mkdtemp()
+        tts_local_path = await tts_cosy.tts_edge(
+            response_text, temp_dir
+        )  # 使用 response_text
+        temp_files.append(tts_local_path)
 
-            # 上传 TTS 到 MinIO
-            tts_object_name = f"tts/{record_id}_{os.path.basename(tts_local_path)}"
-            tts_url = storage.upload_file(tts_local_path, tts_object_name)
-            print(f"[Pipeline] TTS 上传完成: {tts_url}")
-        else:
-            print(f"[Pipeline] 跳过 TTS (decision={decision})")
+        # 上传 TTS 到 MinIO
+        tts_object_name = f"tts/{record_id}_{os.path.basename(tts_local_path)}"
+        tts_url = storage.upload_file(tts_local_path, tts_object_name)
+        print(f"[Pipeline] TTS 上传完成: {tts_url}")
 
         # 保存分析结果
         save_analysis_result(
@@ -96,6 +95,7 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
             voice_record_id=record_id,
             asr_text=raw_text,
             refined_text=refined_text,
+            response_text=response_text,  # 新增 response_text
             confidence=float(confidence),
             decision=decision,
             tts_audio_url=tts_url,

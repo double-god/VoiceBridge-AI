@@ -95,6 +95,26 @@ def infer_intent(asr_text: str, user_profile: dict) -> dict:
             content = resp.json()["choices"][0]["message"]["content"]
             result = json.loads(content)
             print(f"[Pipeline] LLM 结果: {result}")
+
+            # 根据决策类型生成响应文本
+            decision = result.get("decision", "reject")
+            refined_text = result.get("refined_text", asr_text)
+
+            if decision == "boundary":
+                # boundary: 生成确认问句
+                result["response_text"] = f"您想表达的意思是否为：{refined_text}？"
+            elif decision == "reject":
+                # reject: 生成道歉提示
+                result["response_text"] = (
+                    "抱歉，我不理解您说的话。您可以换一种方式再说一遍吗？"
+                )
+            elif decision == "accept":
+                # accept: 使用精炼后的文本作为确认
+                result["response_text"] = f"好的，{refined_text}"
+            else:
+                # 未知决策类型
+                result["response_text"] = refined_text
+
             return result
 
         except (
@@ -116,6 +136,7 @@ def infer_intent(asr_text: str, user_profile: dict) -> dict:
                     "confidence": 0.0,
                     "decision": "reject",
                     "reason": f"推理服务不可用(重试{max_retries}次后失败): {e}",
+                    "response_text": "抱歉，语音服务暂时不可用，请稍后再试。",
                 }
 
         except Exception as e:
@@ -126,4 +147,5 @@ def infer_intent(asr_text: str, user_profile: dict) -> dict:
                 "confidence": 0.0,
                 "decision": "reject",
                 "reason": f"推理处理失败: {e}",
+                "response_text": "抱歉，处理您的请求时出现错误。",
             }

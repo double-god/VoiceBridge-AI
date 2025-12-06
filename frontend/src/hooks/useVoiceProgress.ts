@@ -90,10 +90,13 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
     if (!recordId) {
       return;
     }
-    //如果已经完成就不重新连接
-    if (isCompleted) {
-      return;
-    }
+
+    // 重置状态（新的 recordId，重新开始）
+    setStatus('uploaded');
+    setProgress(10);
+    setMessage('等待处理...');
+    setResult(null);
+    setError(null);
 
     //关闭之前的连接（通过直接操作 ref，避免触发 setState）
     if (eventSourceRef.current) {
@@ -157,6 +160,7 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
                 voice_record_id: recordId!,
                 asr_text: data.asr_text || '',
                 refined_text: data.refined_text || '',
+                response_text: data.response_text || '',
                 confidence: 0,
                 decision: (data.decision as 'accept' | 'reject' | 'boundary') || 'accept',
                 tts_audio_url: data.tts_url || '',
@@ -199,7 +203,7 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
     return () => {
       closeConnection();
     };
-  }, [recordId, isCompleted, closeConnection]); //依赖数组
+  }, [recordId, closeConnection]); //依赖数组 - 移除 isCompleted 避免完成后重复连接
 
   //取消任务的方法
   const cancel = useCallback(async () => {
