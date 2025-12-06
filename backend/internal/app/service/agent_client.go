@@ -43,18 +43,20 @@ func NewAgentClient(cfg *config.Config, updater StatusUpdater) *AgentClient {
 // ProcessRequest 发送给 Python 的请求体
 type AgentProcessRequest struct {
 	RecordID    uint   `json:"record_id"`
+	UserID      uint   `json:"user_id"`
 	MinioBucket string `json:"minio_bucket"`
 	MinioKey    string `json:"minio_key"`
 }
 
 // NotifyAgent 异步调用 AI Agent
 // 上传成功后立即返回，不阻塞用户请求
-func (c *AgentClient) NotifyAgent(recordID uint, bucket, key string) {
+func (c *AgentClient) NotifyAgent(recordID uint, userID uint, bucket, key string) {
 	// 启动 goroutine 异步发送
 	go func() {
 		url := fmt.Sprintf("%s/api/agent/process", c.cfg.Ai.ServiceUrl)
 		reqBody := AgentProcessRequest{
 			RecordID:    recordID,
+			UserID:      userID,
 			MinioBucket: bucket,
 			MinioKey:    key,
 		}
@@ -98,10 +100,11 @@ func (c *AgentClient) NotifyAgent(recordID uint, bucket, key string) {
 }
 
 // NotifyAgentSync 同步调用 ，用于需要等待结果的场景
-func (c *AgentClient) NotifyAgentSync(recordID uint, bucket, key string) error {
+func (c *AgentClient) NotifyAgentSync(recordID uint, userID uint, bucket, key string) error {
 	url := fmt.Sprintf("%s/api/agent/process", c.cfg.Ai.ServiceUrl)
 	reqBody := AgentProcessRequest{
 		RecordID:    recordID,
+		UserID:      userID,
 		MinioBucket: bucket,
 		MinioKey:    key,
 	}

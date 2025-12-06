@@ -2,7 +2,7 @@ import os
 import json
 import tempfile
 
-from core import asr_whisper, llm_reasoning, tts_edge, storage
+from core import asr_whisper, llm_reasoning, tts_cosy, storage
 from core.database import (
     SessionLocal,
     update_record_status,
@@ -80,7 +80,7 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
         if decision == "accept":
             print(f"[Pipeline] 执行 TTS...")
             temp_dir = tempfile.mkdtemp()
-            tts_local_path = await tts_edge.tts_edge(refined_text, temp_dir)
+            tts_local_path = await tts_cosy.tts_edge(refined_text, temp_dir)
             temp_files.append(tts_local_path)
 
             # 上传 TTS 到 MinIO
@@ -94,8 +94,8 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
         save_analysis_result(
             db=db,
             voice_record_id=record_id,
-            transcript=raw_text,
-            analysis_data=json.dumps(llm_result, ensure_ascii=False),
+            asr_text=raw_text,
+            refined_text=refined_text,
             confidence=float(confidence),
             decision=decision,
             tts_audio_url=tts_url,

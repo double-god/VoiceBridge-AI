@@ -8,8 +8,8 @@ _model = None
 def get_model():
     global _model
     if _model is None:
-        print(f"[ASR] 正在加载 Whisper 模型:{settings.WHISPER_MODEL_NAME} ...")
-        _model = whisper.load_model(settings.WHISPER_MODEL_NAME)
+        print(f"[ASR] 正在加载 Whisper 模型:{settings.WHISPER_MODEL} ...")
+        _model = whisper.load_model(settings.WHISPER_MODEL)
     return _model
 
 

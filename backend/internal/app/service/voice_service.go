@@ -59,7 +59,7 @@ func (s *VoiceService) UploadAndProcess(userID uint, file *multipart.FileHeader,
 
 	// 异步通知 AI Agent
 	// 只要数据库存好了，就可以告诉前端成功了，AI 慢慢算
-	s.agentClient.NotifyAgent(record.ID, record.MinioBucket, record.MinioKey)
+	s.agentClient.NotifyAgent(record.ID, record.UserID, record.MinioBucket, record.MinioKey)
 
 	return record, nil
 }

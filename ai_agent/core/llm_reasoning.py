@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 from .config import settings
 
 
@@ -14,6 +15,7 @@ def _build_system_prompt(user_profile: dict) -> str:
 
 ## 你的任务
 将模糊的语音识别文本(ASR)转换为清晰、明确的意图表达, 并以第一人称输出.
+**重要: 保持输入语言不变(中文输入→中文输出, 英文输入→英文输出).**
 
 ## 当前用户画像
 - 姓名: {user_profile.get('name', '未知')}
@@ -33,13 +35,23 @@ def _build_system_prompt(user_profile: dict) -> str:
 3. 输出的 refined_text 必须是第一人称陈述句
 4. 如果完全无法理解, 返回原文并标记 reject
 
-## 示例
+## 示例 (中文)
 
 输入: "那个...水...喝"
 输出: {{"refined_text": "我想喝水", "confidence": 0.92, "decision": "accept", "reason": "用户表达了喝水的需求, 语义清晰"}}
 
 输入: "药...吃了吗...早上"
 输出: {{"refined_text": "我早上的药吃了吗?", "confidence": 0.78, "decision": "boundary", "reason": "用户询问用药情况, 但不确定是在问自己还是提醒"}}
+
+## 示例 (English)
+
+Input: "I need... water... drink"
+Output: {{"refined_text": "I want to drink water", "confidence": 0.90, "decision": "accept", "reason": "User clearly expresses the need for water"}}
+
+Input: "uh... medicine... morning"
+Output: {{"refined_text": "Did I take my morning medicine?", "confidence": 0.75, "decision": "boundary", "reason": "User asking about medication, but context unclear"}}
+
+## 无意义输入
 
 输入: "嗯嗯啊啊呃"
 输出: {{"refined_text": "嗯嗯啊啊呃", "confidence": 0.15, "decision": "reject", "reason": "无法识别有效语义内容"}}
@@ -54,40 +66,64 @@ def _build_system_prompt(user_profile: dict) -> str:
 
 def infer_intent(asr_text: str, user_profile: dict) -> dict:
     """
-    Combine user profile for intent inference
+    Combine user profile for intent inference (with retry)
     """
     system_prompt = _build_system_prompt(user_profile)
 
-    try:
-        headers = {
-            "Authorization": f"Bearer {settings.AI_AGENT_LLM_API_KEY}",
-            "Content-Type": "application/json",
-        }
-        payload = {
-            "model": "qwen3-max",
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"ASR文本: {asr_text}"},
-            ],
-            "response_format": {"type": "json_object"},
-        }
+    headers = {
+        "Authorization": f"Bearer {settings.AI_AGENT_LLM_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": settings.LLM_MODEL_NAME,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"ASR文本: {asr_text}"},
+        ],
+        "response_format": {"type": "json_object"},
+    }
 
-        resp = requests.post(
-            settings.AI_AGENT_LLM_API_URL, headers=headers, json=payload
-        )
-        resp.raise_for_status()
+    # 重试机制: 最多3次, 指数退避
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(
+                settings.AI_AGENT_LLM_API_URL, headers=headers, json=payload, timeout=30
+            )
+            resp.raise_for_status()
 
-        content = resp.json()["choices"][0]["message"]["content"]
-        result = json.loads(content)
+            content = resp.json()["choices"][0]["message"]["content"]
+            result = json.loads(content)
+            print(f"[Pipeline] LLM 结果: {result}")
+            return result
 
-    except Exception as e:
-        print(f"[LLM推理] 请求失败: {e}")
-        # 降级处理
-        result = {
-            "refined_text": asr_text,
-            "confidence": 0.0,
-            "decision": "reject",
-            "reason": f"推理服务不可用: {e}",
-        }
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.SSLError,
+            requests.exceptions.ConnectionError,
+        ) as e:
+            # 网络相关错误, 可重试
+            if attempt < max_retries - 1:
+                wait_time = 2**attempt  # 指数退避: 1s, 2s, 4s
+                print(f"[LLM推理] 请求失败 (尝试 {attempt + 1}/{max_retries}): {e}")
+                print(f"[LLM推理] {wait_time}秒后重试...")
+                time.sleep(wait_time)
+                continue
+            else:
+                print(f"[LLM推理] 最终失败: {e}")
+                return {
+                    "refined_text": asr_text,
+                    "confidence": 0.0,
+                    "decision": "reject",
+                    "reason": f"推理服务不可用(重试{max_retries}次后失败): {e}",
+                }
 
-    return result
+        except Exception as e:
+            # 其他错误(如JSON解析), 不重试
+            print(f"[LLM推理] 处理失败: {e}")
+            return {
+                "refined_text": asr_text,
+                "confidence": 0.0,
+                "decision": "reject",
+                "reason": f"推理处理失败: {e}",
+            }

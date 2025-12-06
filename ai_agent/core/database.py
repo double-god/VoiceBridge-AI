@@ -16,7 +16,8 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(100), unique=True, nullable=False)
-    password_hash = Column(String(355), nullable=False)
+    password = Column(String(255), nullable=False)  # 字段名改为 password,匹配 Go 模型
+    role = Column(String(20), default="patient")
     name = Column(String(100))
     age = Column(Integer)
     condition = Column(Text)
@@ -24,6 +25,7 @@ class User(Base):
     common_needs = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
 
 
 # 对应go的model.VoiceRecord
@@ -31,6 +33,9 @@ class VoiceRecord(Base):
     __tablename__ = "voice_records"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False)
+    minio_bucket = Column(String(100), nullable=False)
+    minio_key = Column(String(255), nullable=False)
+    duration = Column(Integer, nullable=False, default=0)
     audio_url = Column(String(500))
     raw_text = Column(Text)
     refined_text = Column(Text)
@@ -38,10 +43,11 @@ class VoiceRecord(Base):
     decision = Column(String(20))
     reason = Column(Text)
     tts_url = Column(String(500))
-    status = Column(String(50), default="pending")
+    status = Column(String(50), default="uploaded")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    # 上传-> 处理中->已完成->失败
+    deleted_at = Column(DateTime, nullable=True)
+    # 状态流转: uploaded->processing_asr->processing_llm->processing_tts->completed->failed
 
 
 # 对应go:model.AnalysisResult
@@ -49,11 +55,14 @@ class AnalysisResult(Base):
     __tablename__ = "analysis_results"
     id = Column(Integer, primary_key=True)
     voice_record_id = Column(Integer)
-    transcript = Column(Text)
-    analysis_data = Column(Text)
+    asr_text = Column(Text)
+    refined_text = Column(Text)
     confidence = Column(Float)
     decision = Column(String)
     tts_audio_url = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
 
 
 def get_db():
@@ -112,8 +121,8 @@ def get_record(db, record_id: int) -> VoiceRecord | None:
 def save_analysis_result(
     db,
     voice_record_id: int,
-    transcript: str,
-    analysis_data: str,
+    asr_text: str,
+    refined_text: str,
     confidence: float,
     decision: str,
     tts_audio_url: str,
@@ -124,8 +133,8 @@ def save_analysis_result(
     Args:
         db: 数据库会话
         voice_record_id: 语音记录 ID
-        transcript: ASR 转录文本
-        analysis_data: LLM 分析结果 JSON
+        asr_text: ASR 转录文本
+        refined_text: LLM 精炼后的文本
         confidence: 置信度
         decision: 决策 (accept/boundary/reject)
         tts_audio_url: TTS 音频 URL
@@ -135,8 +144,8 @@ def save_analysis_result(
     """
     result = AnalysisResult(
         voice_record_id=voice_record_id,
-        transcript=transcript,
-        analysis_data=analysis_data,
+        asr_text=asr_text,
+        refined_text=refined_text,
         confidence=confidence,
         decision=decision,
         tts_audio_url=tts_audio_url,

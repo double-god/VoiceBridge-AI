@@ -4,18 +4,18 @@ services:
     image: postgres:15-alpine
     container_name: voicebridge_postgres
     environment:
-      POSTGRES_USER: ${DB_USER:-voicebridge}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-root123}
-      POSTGRES_DB: ${DB_NAME:-voicebridge}
+      POSTGRES_USER: ${POSTGRES_USER:-nainong}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-nainong}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - voicebridge-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-voicebridge}"]
+      test: ["CMD-SHELL", "pg_isready -U nainong"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,8 +25,8 @@ services:
     image: minio/minio
     container_name: voicebridge_minio
     environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -51,10 +51,13 @@ services:
         condition: service_healthy
     networks:
       - voicebridge-network
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: >
       /bin/sh -c "
       sleep 5;
-      mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
       mc mb myminio/voicebridge --ignore-existing;
       mc anonymous set download myminio/voicebridge;
       echo 'Bucket created successfully';
@@ -69,14 +72,14 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ${DB_USER:-voicebridge}
-      DB_PASSWORD: ${DB_PASSWORD:-root123}
-      DB_NAME: ${DB_NAME:-voicebridge}
-      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key}
+      DB_USER: ${POSTGRES_USER:-nainong}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB:-nainong}
+      JWT_SECRET: ${JWT_SECRET}
       MINIO_ENDPOINT: minio:9000
-      MINIO_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
-      MINIO_BUCKET: ${MINIO_BUCKET_NAME:-voicebridge}
+      MINIO_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: voicebridge
       MINIO_USE_SSL: "false"
       AI_AGENT_SERVICE_URL: http://ai_agent:8000
     ports:
@@ -97,14 +100,28 @@ services:
       dockerfile: Dockerfile
     container_name: voicebridge_ai_agent
     environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-nainong}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB:-nainong}
       MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-voicebridge}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_NAME: voicebridge
       MINIO_SECURE: "false"
+      WHISPER_MODEL: base
+      AI_AGENT_LLM_API_URL: ${AI_AGENT_LLM_API_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}
+      AI_AGENT_LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL_NAME: qwen3-max
     ports:
       - "8000:8000"
+    volumes:
+      - ./ai_agent:/app:rw  # 挂载代码目录，方便开发调试
+      - cosy_models:/app/models
     depends_on:
+      postgres:
+        condition: service_healthy
       minio:
         condition: service_healthy
       minio-init:
@@ -146,3 +163,4 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+  cosy_models:  # CosyVoice 模型持久化存储
