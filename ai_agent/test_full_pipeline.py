@@ -94,9 +94,16 @@ async def test_full_pipeline(sample_name="Anita"):
     response_text = intent_result["refined_text"][:80] + "..."
     print(f"📢 待合成文本: {response_text}")
 
-    output_path = await tts_edge(response_text, "/tmp")
+    # 保存到 output 目录（挂载到宿主机）
+    output_dir = "/app/output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_path = await tts_edge(response_text, output_dir)
     file_size = os.path.getsize(output_path) / 1024
-    print(f"✅ 语音合成完成: {output_path} ({file_size:.1f} KB)")
+
+    # 转换为相对路径显示
+    relative_path = output_path.replace("/app/", "")
+    print(f"✅ 语音合成完成: {relative_path} ({file_size:.1f} KB)")
 
     # ============================================================
     # 测试总结

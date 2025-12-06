@@ -73,6 +73,40 @@ class TTSService:
             traceback.print_exc()
             raise e
 
+    def _detect_language(self, text: str) -> str:
+        """
+        检测文本语言，返回适合的音色
+
+        Args:
+            text: 输入文本
+
+        Returns:
+            音色名称: '中文女', '英文女', '日语女', '粤语女', '韩语女'
+        """
+        # 统计各类字符数量
+        chinese_count = sum(1 for char in text if "\u4e00" <= char <= "\u9fff")
+        english_count = sum(1 for char in text if char.isalpha() and ord(char) < 128)
+        japanese_count = sum(
+            1
+            for char in text
+            if "\u3040" <= char <= "\u309f" or "\u30a0" <= char <= "\u30ff"
+        )
+
+        total_chars = chinese_count + english_count + japanese_count
+
+        if total_chars == 0:
+            return "中文女"  # 默认中文
+
+        # 根据占比判断语言
+        if chinese_count / total_chars > 0.3:
+            return "中文女"
+        elif english_count / total_chars > 0.5:
+            return "英文女"
+        elif japanese_count / total_chars > 0.3:
+            return "日语女"
+        else:
+            return "中文女"  # 默认中文
+
     async def synthesize(self, text: str, output_file: str) -> str:
         """
         合成语音并保存到文件
@@ -87,12 +121,13 @@ class TTSService:
         # 确保模型已加载
         self._ensure_loaded()
 
-        print(f"[TTS] 正在合成: {text[:50]}...")
+        # 自动检测语言并选择音色
+        speaker = self._detect_language(text)
+        print(f"[TTS] 正在合成 ({speaker}): {text[:50]}...")
 
         try:
             # 使用 CosyVoice 的 inference_sft 方法进行零样本合成
-            # 对于中文文本使用中文音色，英文文本使用英文音色
-            output = self.inference.inference_sft(text, "中文女")
+            output = self.inference.inference_sft(text, speaker)
 
             # output 是一个生成器，遍历获取音频
             audio_data = []

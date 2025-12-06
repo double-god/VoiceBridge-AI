@@ -133,14 +133,14 @@ def check_status(token: str, record_id: int, max_wait: int = 180) -> dict:
                                 "processing_asr": "33%",
                                 "processing_llm": "66%",
                                 "processing_tts": "80%",
-                                "done": "100%",
+                                "completed": "100%",
                                 "error": "ERROR",
                             }.get(status, status)
                             print(f"    状态: {status} ({progress})")
                             last_status = status
 
                         # 完成或错误
-                        if status in ["done", "error"]:
+                        if status in ["completed", "error"]:
                             return rec
 
         except Exception as e:
@@ -220,7 +220,7 @@ def main():
                     "record_id": record_id,
                     "status": result.get("status"),
                     "decision": result.get("decision"),
-                    "success": result.get("status") == "done",
+                    "success": result.get("status") == "completed",
                 }
             )
         else:

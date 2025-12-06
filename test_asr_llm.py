@@ -67,7 +67,7 @@ def test_asr_llm(username, audio_file, expected_language):
                     status = rec["status"]
 
                     # 只要到达processing_tts或更后面的状态,说明LLM已完成
-                    if status in ["processing_tts", "done", "error"]:
+                    if status in ["processing_tts", "completed", "error"]:
                         print(f"\n✅ LLM处理完成! (状态: {status})")
 
                         result = {
@@ -162,7 +162,6 @@ def main():
         print(f"  {status} - {name}")
 
     print(f"\n总计: {success_count}/{len(results)} 完全通过")
-
 
     if success_count == len(results):
         print("\n🎉 核心功能验证通过!")

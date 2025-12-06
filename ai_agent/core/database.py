@@ -79,7 +79,7 @@ def update_record_status(db, record_id: int, status: str, **kwargs):
     Args:
         db: 数据库会话
         record_id: 记录ID
-        status: 新状态pending/processing_asr/processing_llm/processing_tts/completed/failed
+        status: 新状态pending/processing_asr/processing_llm/processing_tts/completed/failed/error
         kwargs: 其他字段更新
     """
     record = db.query(VoiceRecord).filter(VoiceRecord.id == record_id).first()
@@ -128,7 +128,7 @@ def save_analysis_result(
     tts_audio_url: str,
 ) -> AnalysisResult:
     """
-    保存分析结果到数据库
+    保存分析结果到数据库 (如果已存在则更新)
 
     Args:
         db: 数据库会话
@@ -142,16 +142,34 @@ def save_analysis_result(
     Returns:
         保存的分析结果对象
     """
-    result = AnalysisResult(
-        voice_record_id=voice_record_id,
-        asr_text=asr_text,
-        refined_text=refined_text,
-        confidence=confidence,
-        decision=decision,
-        tts_audio_url=tts_audio_url,
+    # 检查是否已存在
+    result = (
+        db.query(AnalysisResult)
+        .filter(AnalysisResult.voice_record_id == voice_record_id)
+        .first()
     )
-    db.add(result)
+
+    if result:
+        # 更新已有记录
+        result.asr_text = asr_text
+        result.refined_text = refined_text
+        result.confidence = confidence
+        result.decision = decision
+        result.tts_audio_url = tts_audio_url
+        print(f"[DB] 更新分析结果 voice_record_id={voice_record_id}")
+    else:
+        # 创建新记录
+        result = AnalysisResult(
+            voice_record_id=voice_record_id,
+            asr_text=asr_text,
+            refined_text=refined_text,
+            confidence=confidence,
+            decision=decision,
+            tts_audio_url=tts_audio_url,
+        )
+        db.add(result)
+        print(f"[DB] 保存分析结果 voice_record_id={voice_record_id}")
+
     db.commit()
     db.refresh(result)
-    print(f"[DB] 保存分析结果 voice_record_id={voice_record_id}")
     return result

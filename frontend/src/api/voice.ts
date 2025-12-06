@@ -63,7 +63,7 @@ export function subscribeProgress(
   //获取token
   const token = localStorage.getItem('token');
   //构造sse url,eventsource只能用get请求
-  const url = `${baseUrl}/voice/progress/${recordId}?token=${token}`;
+  const url = `${baseUrl}/voice/status/stream/${recordId}?token=${token}`;
   //创建eventsource实例,专门用于接受SSE
   const eventSource = new EventSource(url);
 

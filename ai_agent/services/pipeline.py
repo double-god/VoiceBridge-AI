@@ -21,9 +21,9 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
     4. 更新状态为 processing_llm
     5. 执行 LLM 推理
     6. 更新状态为 processing_tts
-    7. 执行 TTS 合成
+    7. 执行 TTS 合成 (CosyVoice)
     8. 上传 TTS 音频到 MinIO
-    9. 更新状态为 done, 保存所有结果
+    9. 更新状态为 completed, 保存所有结果
 
     Args:
         record_id: 语音记录 ID
@@ -102,12 +102,12 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
         )
 
         # 完成, 更新最终状态
-        update_record_status(db, record_id, "done", tts_url=tts_url)
+        update_record_status(db, record_id, "completed", tts_url=tts_url)
         print(f"[Pipeline] 记录 {record_id} 处理完成!")
 
         return {
             "record_id": record_id,
-            "status": "done",
+            "status": "completed",
             "raw_text": raw_text,
             "refined_text": refined_text,
             "confidence": confidence,
@@ -119,7 +119,16 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
     except Exception as e:
         # 出错时更新状态
         print(f"[Pipeline] 处理失败: {e}")
-        update_record_status(db, record_id, "error", reason=str(e))
+        import traceback
+
+        traceback.print_exc()
+
+        try:
+            # 回滚事务，避免 PendingRollbackError
+            db.rollback()
+            update_record_status(db, record_id, "error", reason=str(e))
+        except Exception as db_error:
+            print(f"[Pipeline] 更新错误状态失败: {db_error}")
         raise
 
     finally:

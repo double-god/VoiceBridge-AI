@@ -67,7 +67,7 @@ def test_user(username, audio_file, expected_language):
                 if rec["ID"] == record_id:
                     status = rec["status"]
 
-                    if status == "done":
+                    if status == "completed":
                         print(f"\n✅ 处理完成!")
                         print(f"原始文本: {rec['raw_text'][:100]}...")
                         print(f"精炼文本: {rec['refined_text'][:100]}...")
