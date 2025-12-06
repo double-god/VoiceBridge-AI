@@ -84,7 +84,7 @@ graph TD
         Pipeline[异步任务流]
         Whisper[ASR 语音转写]
         LLM[LLM 意图推理]
-        TTS[cosyvoice TTS 合成]
+        TTS[Edge-TTS 语音合成]
     end
 
     User --> UI
@@ -97,8 +97,8 @@ graph TD
     Pipeline -->|6. ASR转写| Whisper
     Pipeline -->|7. 获取画像| Postgres
     Pipeline -->|8. 推理| LLM
-    Pipeline -->|9. 合成语音| cosyvoice TTS
-    cosyvoice TTS -->|10. 上传结果| MinIO
+    Pipeline -->|9. 合成语音| TTS
+    TTS -->|10. 上传结果| MinIO
 
     Pipeline -.->|状态回调| Postgres
     SSE_Server -.->|轮询/推送进度| SSE_Client
@@ -404,7 +404,6 @@ voicebridge-ai/
 - **Accept(接受)**: AI 理解了您的意图,显示"您的指令"和清晰的表达文本,自动播放语音
 - **Boundary(确认)**: AI 不太确定,显示"AI 确认"和询问文本,如"您想表达的意思是否为：去喝水？"
 - **Reject(拒绝)**: AI 无法理解,显示"AI 反馈"和提示"抱歉,我不理解您说的话。您可以换一种方式再说一遍吗？"
-
 
 ### 管理员/开发者指南
 
@@ -717,8 +716,7 @@ FRONTEND_PORT=80
 - 前端无障碍体验的进一步优化。
 - 更高效的 TTS 模型集成
 - 历史记录的查询与管理功能。
-- 关于llm处理信息后可以给出与用户说话内容有关回应和医疗建议的功能。
-
+- 关于 llm 处理信息后可以给出与用户说话内容有关回应和医疗建议的功能。
 
 ## 📄 许可证
 
