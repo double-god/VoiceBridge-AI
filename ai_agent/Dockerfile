@@ -11,12 +11,13 @@ RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debia
     g++ \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
+    # 清理 apt 缓存，减小镜像体积
 
 # 安装 uv
 # 直接从官方镜像复制 uv 二进制文件
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# --- 第三步：使用 uv 安装依赖 ---
+# 使用 uv 安装依赖
 COPY requirements.txt .
 
 # --system: 直接装在系统 python 里，不创建 venv
@@ -59,7 +60,9 @@ RUN git clone --depth 1 https://github.com/FunAudioLLM/CosyVoice.git /tmp/CosyVo
 
 # 安装 Matcha-TTS 子模块 (CosyVoice 依赖)
 RUN git clone --depth 1 https://github.com/shivammehta25/Matcha-TTS.git /tmp/Matcha-TTS && \
+# depth1 克隆只拿最新提交，减小镜像体积
     cp -r /tmp/Matcha-TTS/matcha /usr/local/lib/python3.11/site-packages/ && \
+    # 直接把源码丢到 site-packages 里，省去安装步骤
     rm -rf /tmp/Matcha-TTS
 
 # 安装 Matcha-TTS 和 CosyVoice 的 Python 依赖

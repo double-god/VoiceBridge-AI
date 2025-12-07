@@ -80,3 +80,7 @@ ai_agent/data/grand_round_dataset.json
 
 # Docker 配置
 /etc/docker/daemon.json
+
+# ========== 模型文件 (不上传) ==========
+# CosyVoice 预训练模型 (由 ModelScope 自动下载)
+ai_agent/pretrained_models/
