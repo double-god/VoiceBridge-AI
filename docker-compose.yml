@@ -118,7 +118,7 @@ services:
       - "8000:8000"
     volumes:
       - ./ai_agent:/app:rw  # 挂载代码目录，方便开发调试
-      - cosy_models:/app/models
+      - ./ai_agent/pretrained_models:/root/.cache/modelscope  # 挂载模型缓存，防止重复下载
     depends_on:
       postgres:
         condition: service_healthy
@@ -163,4 +163,3 @@ networks:
 volumes:
   postgres_data:
   minio_data:
-  cosy_models:  # CosyVoice 模型持久化存储
