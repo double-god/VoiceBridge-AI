@@ -19,4 +19,14 @@ pycache/
 
 *.log
 *.wav
+
+# 忽略模型文件 (通过挂载卷提供，不打包进镜像)
+
+pretrained_models/
+models/
+*.pt
+*.pth
+*.onnx
+*.bin
+*.safetensors
 *.mp3
