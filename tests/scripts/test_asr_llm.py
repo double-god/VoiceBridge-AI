@@ -66,6 +66,21 @@ def test_asr_llm(username, audio_file, expected_language):
                 if rec["ID"] == record_id:
                     status = rec["status"]
 
+                    # 检查是否卡在 uploaded 状态（可能模型还在加载）
+                    if status == "uploaded" and i > 30:  # 超过60秒还是 uploaded
+                        if i % 15 == 0:  # 每30秒提示一次
+                            print(
+                                f"  ⚠️  记录卡在 uploaded 状态，可能 AI Agent 正在下载模型..."
+                            )
+
+                    # 检查 agent_failed 状态
+                    if status == "agent_failed":
+                        print(f"\n❌ AI Agent 处理失败! (状态: {status})")
+                        print(
+                            f"   提示: 请检查 AI Agent 日志: docker compose logs ai_agent"
+                        )
+                        return None
+
                     # 只要到达processing_tts或更后面的状态,说明LLM已完成
                     if status in ["processing_tts", "completed", "error"]:
                         print(f"\n✅ LLM处理完成! (状态: {status})")
@@ -109,10 +124,12 @@ def test_asr_llm(username, audio_file, expected_language):
 
                         return result
 
-        if i % 5 == 0:
+        if i % 10 == 0:  # 每20秒打印一次
             print(f"  等待中... ({i*2}秒)")
 
-    print(f"⏱️ 超时")
+    print(f"\n⏱️ 超时（{i*2}秒）")
+    print(f"   提示: 如果是首次运行，AI Agent 可能正在下载模型（约2GB），请耐心等待")
+    print(f"   可以使用以下命令查看下载进度: docker compose logs -f ai_agent")
     return None
 
 
