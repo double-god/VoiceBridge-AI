@@ -2,6 +2,7 @@ import os
 from pydantic_settings import BaseSettings
 
 
+# 自动读取环境变量、验证数据是否正确的继承
 class Settings(BaseSettings):
     # App
     APP_ENV: str = os.getenv("APP_ENV", "development")
@@ -27,9 +28,9 @@ class Settings(BaseSettings):
     AI_AGENT_LLM_API_KEY: str = os.getenv("AI_AGENT_LLM_API_KEY", "")
     LLM_MODEL_NAME: str = os.getenv("LLM_MODEL_NAME", "qwen3-max")
 
-    @property
+    @property  # 把这个函数伪装成变量
     def DATABASE_URL(self) -> str:
-        """构建数据库连接 URL"""
+        """构建数据库连接 URL,把用户名、密码、主机拼接成了一个长长的数据库连接串"""
         return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     class Config:
@@ -39,5 +40,5 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# 拼接数据库 URL
+# 拼接数据库 URL，嗯对这里有点多余了
 DATABASE_URL = f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"

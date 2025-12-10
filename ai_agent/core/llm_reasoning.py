@@ -90,6 +90,7 @@ def infer_intent(asr_text: str, user_profile: dict) -> dict:
             resp = requests.post(
                 settings.AI_AGENT_LLM_API_URL, headers=headers, json=payload, timeout=30
             )
+            # 如果响应状态码不是200, 抛出异常
             resp.raise_for_status()
 
             content = resp.json()["choices"][0]["message"]["content"]
