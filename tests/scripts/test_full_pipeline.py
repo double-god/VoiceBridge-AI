@@ -1,6 +1,10 @@
 """
 完整流程测试: ASR → LLM → TTS
 测试使用 demo 数据中的 Anita 案例
+
+⚠️ 此脚本需要在 AI Agent 容器内运行
+运行方法:
+  docker exec -it voicebridge_ai_agent python3 /app/tests/scripts/test_full_pipeline.py
 """
 
 import asyncio
@@ -8,7 +12,23 @@ import sys
 import os
 import json
 
-sys.path.insert(0, "/app")
+# 检测运行环境
+if os.path.exists("/app/core"):
+    # 在容器内
+    sys.path.insert(0, "/app")
+else:
+    # 在宿主机，不支持直接运行
+    print("❌ 错误: 此脚本需要在 Docker 容器内运行")
+    print("")
+    print("请使用以下命令:")
+    print(
+        "  docker exec -it voicebridge_ai_agent python3 tests/scripts/test_full_pipeline.py"
+    )
+    print("")
+    print("或者使用 HTTP API 测试脚本:")
+    print("  python3 tests/scripts/test_asr_llm.py")
+    print("  python3 tests/scripts/test_upload_quick.py")
+    sys.exit(1)
 
 from core.asr_whisper import transcribe
 from core.llm_reasoning import infer_intent
@@ -26,9 +46,9 @@ async def test_full_pipeline(sample_name="Anita"):
     print("🧪 完整流程测试: ASR → LLM → TTS")
     print("=" * 60)
 
-    # 数据路径
+    # 数据路径（容器内路径）
     json_file = f"/app/data/demo/{sample_name}.json"
-    audio_path = f"/app/data/demo/{sample_name}.wav"
+    audio_file = f"/app/data/demo/{sample_name}.wav"
 
     # 检查文件
     if not os.path.exists(json_file):
@@ -49,9 +69,8 @@ async def test_full_pipeline(sample_name="Anita"):
     print(f'📝 状况: {profile["condition"]}')
     print(f"🎵 音频: {audio_path}")
 
-    # ============================================================
     # Step 1: ASR (语音识别)
-    # ============================================================
+
     print("\n" + "─" * 60)
     print("📝 Step 1: 语音识别 (ASR)")
     print("─" * 60)

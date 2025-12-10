@@ -110,37 +110,52 @@ docker compose logs -f ai_agent
 
 预计下载时间：5-15 分钟（取决于网速）。**下载完成前测试会超时！**
 
-### 2.1 运行完整流程测试
+### 2.1 运行完整流程测试（容器内测试）
 
 ```bash
 cd /home/haotang/VoiceBridgeAI/VoiceBridge-AI
 
-# 确保服务已启动且模型已下载
-docker compose ps
-bash scripts/check_model_status.sh
+# 此测试需要在容器内运行（直接调用 Python 模块）
+docker exec -it voicebridge_ai_agent python3 tests/scripts/test_full_pipeline.py
 
-# 运行完整流程测试
+# 或者进入容器后运行
+docker exec -it voicebridge_ai_agent bash
 python3 tests/scripts/test_full_pipeline.py
+exit
 ```
 
-### 2.2 测试 ASR + LLM（不含 TTS）
+**说明**：此脚本直接导入 `core` 模块进行单元测试，必须在容器环境内运行。
+
+### 2.2 测试 ASR + LLM（宿主机 HTTP 测试，✅ 推荐）
 
 ```bash
-# 快速测试 ASR 和 LLM 推理
+cd /home/haotang/VoiceBridgeAI/VoiceBridge-AI
+
+#  推荐：通过 HTTP API 测试（在宿主机运行）
 python3 tests/scripts/test_asr_llm.py
+
+# 如果测试超时，检查模型下载进度
+docker compose logs -f ai_agent
 ```
+
+**说明**：通过 HTTP API 测试，模拟真实用户请求，可直接在宿主机运行。
+
+**常见超时原因**：
+
+- AI Agent 正在下载模型（首次启动需要 5-15 分钟）
+- 使用 `bash scripts/check_model_status.sh` 检查模型状态
 
 ### 2.3 测试 TTS 合成
 
 ```bash
-# 单独测试 TTS 功能
-python3 tests/scripts/test_tts.py
+# 单独测试 TTS 功能（容器内）
+docker exec -it voicebridge_ai_agent python3 tests/scripts/test_tts.py
 ```
 
 ### 2.4 快速上传测试
 
 ```bash
-# 测试文件上传和处理流程
+# 测试文件上传和处理流程（宿主机）
 python3 tests/scripts/test_upload_quick.py
 ```
 
