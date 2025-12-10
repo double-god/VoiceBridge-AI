@@ -40,10 +40,11 @@ def download_file(object_name: str, local_path: str = None) -> str:
         filename = Path(object_name).name
         local_path = os.path.join(temp_dir, filename)
 
-    # 确保目录存在
+    # 确保目录存在，创建目录文件夹，去掉文件名部分
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
     try:
+        # 下载文件到文件夹里
         client.fget_object(BUCKET_NAME, object_name, local_path)
         print(f"[MinIO] 下载文件: {object_name} -> {local_path}")
         return local_path
@@ -67,7 +68,7 @@ def upload_file(local_path: str, object_name: str = None) -> str:
 
     try:
         client.fput_object(BUCKET_NAME, object_name, local_path)
-        # 返回前端可访问的 URL (通过 Nginx /minio-api/ 代理)
+        # 返回前端可访问的 URL (通过 Nginx /minio-api/ 代理)，给前端的相对路径
         object_url = f"/minio-api/{BUCKET_NAME}/{object_name}"
         print(f"[MinIO] 上传文件: {local_path} -> {object_url}")
         return object_url

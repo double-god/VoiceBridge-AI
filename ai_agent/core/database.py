@@ -6,7 +6,9 @@ from .config import settings
 
 DATABASE_URL = settings.DATABASE_URL
 
+# 建立连接池，先ping一下连接
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+# 创建会话类，防止误删数据
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -65,7 +67,7 @@ class AnalysisResult(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     deleted_at = Column(DateTime, nullable=True)
 
-
+# 获取数据库会话
 def get_db():
     db = SessionLocal()
     try:

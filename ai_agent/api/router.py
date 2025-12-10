@@ -1,5 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel  # Pydantic 用于数据验证和序列化
 from services.pipeline import process_voice_record
 
 router = APIRouter()
@@ -19,7 +19,7 @@ class ProcessResponse(BaseModel):
     message: str
     record_id: int
 
-
+# 下面函数运行完后，把结果转换成processresponse返回给调用方
 @router.post("/process", response_model=ProcessResponse)
 async def process_voice(request: ProcessRequest, background_tasks: BackgroundTasks):
     """
@@ -39,5 +39,5 @@ async def process_voice(request: ProcessRequest, background_tasks: BackgroundTas
 
 @router.get("/health")
 async def health_check():
-    """健康检查"""
+    """健康检查,存活检查,后续可以改为就绪检查,docker(agent)会发起健康检查,这个接口会被调用让容器(target)报告自己是健康的"""
     return {"status": "ok", "service": "ai_agent"}
