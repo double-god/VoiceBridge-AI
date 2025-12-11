@@ -73,23 +73,21 @@ func (c *AgentClient) NotifyAgent(recordID uint, userID uint, bucket, key string
 			Post(url)
 
 		if err != nil {
-			logger.Log.Error("调用 AI Agent 失败 (已重试)",
+			logger.Log.Warn("调用 AI Agent 失败 (已重试) - 任务保持 uploaded 状态等待重试",
 				zap.Uint("record_id", recordID),
 				zap.Error(err),
 			)
-			// 更新状态为 agent_failed，让前端知道出了问题
-			c.markFailed(recordID)
+			// 不标记失败，保持 uploaded 状态，让后续的重试机制处理
 			return
 		}
 
 		if resp.IsError() {
-			logger.Log.Error("AI Agent 返回错误",
+			logger.Log.Warn("AI Agent 返回错误 - 任务保持 uploaded 状态等待重试",
 				zap.Uint("record_id", recordID),
 				zap.Int("status", resp.StatusCode()),
 				zap.String("body", string(resp.Body())),
 			)
-			// Agent 返回错误也标记失败
-			c.markFailed(recordID)
+			// 不标记失败，让重试机制处理
 		} else {
 			logger.Log.Info("AI Agent 任务接收成功",
 				zap.Uint("record_id", recordID),

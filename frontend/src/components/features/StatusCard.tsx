@@ -17,7 +17,28 @@ export function StatusCard({ recordId }: StatusCardProps) {
   // 自动播放逻辑
   useEffect(() => {
     if (status === 'completed' && result?.analysis_result?.tts_audio_url && audioRef.current) {
-      audioRef.current.play().catch((e) => console.log('自动播放被拦截:', e));
+      console.log('[Audio] 尝试自动播放音频:', result.analysis_result.tts_audio_url);
+      
+      // 尝试加载音频
+      const audio = audioRef.current;
+      audio.load();
+      
+      // 添加错误监听
+      audio.onerror = (e) => {
+        console.error('[Audio] 音频加载失败:', e);
+        console.error('[Audio] 错误详情:', audio.error);
+      };
+      
+      // 添加加载成功监听
+      audio.onloadeddata = () => {
+        console.log('[Audio] 音频加载成功');
+      };
+      
+      // 尝试播放
+      audio.play().catch((e) => {
+        console.log('[Audio] 自动播放被拦截:', e);
+        console.log('[Audio] 用户需要手动点击播放按钮');
+      });
     }
   }, [status, result]);
 

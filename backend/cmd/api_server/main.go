@@ -91,6 +91,14 @@ func main() {
 		Handler: r,
 	}
 
+	// 启动重试 Worker
+	retryWorker := service.NewRetryWorker(db, agentClient, cfg)
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	defer workerCancel()
+
+	go retryWorker.Start(workerCtx)
+	logger.Log.Info("重试 Worker 已启动")
+
 	// 在 Goroutine 中启动服务器 (非阻塞)
 	go func() {
 		logger.Log.Info("HTTP 服务正在启动...", zap.String("addr", srv.Addr))

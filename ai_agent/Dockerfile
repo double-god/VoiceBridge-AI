@@ -6,15 +6,26 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安装系统依赖 (包含 CosyVoice 编译需要的工具)
-RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
-    apt-get update && apt-get install -y --no-install-recommends \
+# ✅ 关键修改：设置非交互模式，防止 apt-get 等待用户输入
+ENV DEBIAN_FRONTEND=noninteractive
+# ✅ 增加 uv 的 HTTP 超时时间（国内网络优化）
+ENV UV_HTTP_TIMEOUT=300
+
+# ✅ 优化 apt 配置和安装命令
+# - 使用阿里云镜像源加速下载
+# - 使用 BuildKit 缓存挂载避免重复下载
+# - 显式更新 ca-certificates 防止 SSL 错误
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
     ffmpeg \
     git \
     g++ \
     build-essential \
-    && rm -rf /var/lib/apt/lists/*
-# 清理 apt 缓存，减小镜像体积
+    && apt-get clean
 
 # 安装 uv
 # 直接从官方镜像复制 uv 二进制文件
@@ -61,15 +72,17 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --index-url https://mirrors.aliyun.com/pypi/simple/
 
 # 克隆并安装 CosyVoice
-RUN git clone --depth 1 https://github.com/FunAudioLLM/CosyVoice.git /tmp/CosyVoice && \
+# ✅ 使用 ghproxy.com 镜像加速 GitHub 访问（国内网络优化）
+RUN git clone --depth 1 --single-branch \
+    https://ghproxy.com/https://github.com/FunAudioLLM/CosyVoice.git /tmp/CosyVoice && \
     cp -r /tmp/CosyVoice/cosyvoice /usr/local/lib/python3.11/site-packages/ && \
     rm -rf /tmp/CosyVoice
 
 # 安装 Matcha-TTS 子模块 (CosyVoice 依赖)
-RUN git clone --depth 1 https://github.com/shivammehta25/Matcha-TTS.git /tmp/Matcha-TTS && \
-    # depth1 克隆只拿最新提交，减小镜像体积
+# ✅ 使用 ghproxy.com 镜像加速 GitHub 访问
+RUN git clone --depth 1 --single-branch \
+    https://ghproxy.com/https://github.com/shivammehta25/Matcha-TTS.git /tmp/Matcha-TTS && \
     cp -r /tmp/Matcha-TTS/matcha /usr/local/lib/python3.11/site-packages/ && \
-    # 直接把源码丢到 site-packages 里，省去安装步骤
     rm -rf /tmp/Matcha-TTS
 
 # 安装 Matcha-TTS 和 CosyVoice 的 Python 依赖

@@ -1,6 +1,7 @@
 import os
 import json
 import tempfile
+import asyncio
 
 from core import asr_whisper, llm_reasoning, tts_cosy, storage
 from core.database import (
@@ -45,9 +46,9 @@ async def process_voice_record(record_id: int, minio_key: str, user_id: int) -> 
         local_audio_path = storage.download_file(minio_key)
         temp_files.append(local_audio_path)
 
-        # 执行 ASR
+        # 执行 ASR (使用线程池避免阻塞主循环)
         print(f"[Pipeline] 执行 ASR...")
-        raw_text = asr_whisper.transcribe(local_audio_path)
+        raw_text = await asyncio.to_thread(asr_whisper.transcribe, local_audio_path)
         print(f"[Pipeline] ASR 结果: {raw_text}")
 
         # 更新状态, 准备 LLM

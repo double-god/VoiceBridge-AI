@@ -126,13 +126,18 @@ class TTSService:
         print(f"[TTS] 正在合成 ({speaker}): {text[:50]}...")
 
         try:
-            # 使用 CosyVoice 的 inference_sft 方法进行零样本合成
-            output = self.inference.inference_sft(text, speaker)
+            # 定义同步函数来执行推理（避免阻塞主循环）
+            def run_inference():
+                output = self.inference.inference_sft(text, speaker)
+                audio_data = []
+                for audio_chunk in output:
+                    audio_data.append(audio_chunk["tts_speech"])
+                return audio_data
 
-            # output 是一个生成器，遍历获取音频
-            audio_data = []
-            for audio_chunk in output:
-                audio_data.append(audio_chunk["tts_speech"])
+            # 使用线程池执行推理
+            import asyncio
+
+            audio_data = await asyncio.to_thread(run_inference)
 
             # 合并音频数据
             if audio_data:

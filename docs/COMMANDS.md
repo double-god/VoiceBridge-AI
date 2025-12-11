@@ -108,7 +108,7 @@ docker compose logs -f ai_agent
 - **Whisper base** (~140MB) - 语音识别
 - **CosyVoice-300M-SFT** (~2GB) - 语音合成
 
-预计下载时间：5-15 分钟（取决于网速）。**下载完成前测试会超时！**
+预计下载时间：5-15 分钟（取决于网速）。**下载完成前测试会超时**
 
 ### 2.1 运行完整流程测试（容器内测试）
 
@@ -131,7 +131,7 @@ exit
 ```bash
 cd /home/haotang/VoiceBridgeAI/VoiceBridge-AI
 
-#  推荐：通过 HTTP API 测试（在宿主机运行）
+#  通过 HTTP API 测试（在宿主机运行）
 python3 tests/scripts/test_asr_llm.py
 
 # 如果测试超时，检查模型下载进度
