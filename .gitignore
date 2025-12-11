@@ -84,3 +84,18 @@ ai_agent/data/grand_round_dataset.json
 # ========== 模型文件 (不上传) ==========
 # CosyVoice 预训练模型 (由 ModelScope 自动下载)
 ai_agent/pretrained_models/
+ai_agent/models/
+
+# 常见模型文件格式（递归忽略）
+**/*.pt
+**/*.pth
+**/*.onnx
+**/*.bin
+**/*.safetensors
+**/*.ckpt
+**/*.pb
+**/*.h5
+**/*.tflite
+**/*.gguf
+**/*.model
+**/*.weights

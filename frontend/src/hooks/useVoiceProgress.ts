@@ -7,8 +7,27 @@ import type {
 } from '@/types';
 
 //配置常量
-//api基础路径，从环境变量读取
+//api基础路径,从环境变量读取
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+
+//辅助函数：确保音频URL是完整的绝对路径
+const normalizeAudioUrl = (url: string | undefined): string => {
+  if (!url) return '';
+  
+  // 如果已经是完整URL（http://或https://开头），直接返回
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // 如果是相对路径，转换为绝对路径
+  // 使用当前页面的协议和域名
+  const baseUrl = window.location.origin;
+  
+  // 确保路径以/开头
+  const path = url.startsWith('/') ? url : `/${url}`;
+  
+  return `${baseUrl}${path}`;
+};
 
 //状态对应的进度百分比映射
 //根据在状态估算进度（与后端 calculateProgress 保持一致）
@@ -148,6 +167,11 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
           // 后端完成时返回的是单独字段，不是完整的 VoiceRecord
           // 构造一个部分结果对象
           if (data.asr_text || data.refined_text || data.tts_url) {
+            // 标准化TTS音频URL，确保是完整的绝对路径
+            const normalizedTtsUrl = normalizeAudioUrl(data.tts_url);
+            console.log('[SSE] 原始TTS URL:', data.tts_url);
+            console.log('[SSE] 标准化后TTS URL:', normalizedTtsUrl);
+            
             setResult({
               id: recordId!,
               user_id: 0,
@@ -163,7 +187,7 @@ export function useVoiceProgress(recordId: number | null): UseVoiceProgressRetur
                 response_text: data.response_text || '',
                 confidence: 0,
                 decision: (data.decision as 'accept' | 'reject' | 'boundary') || 'accept',
-                tts_audio_url: data.tts_url || '',
+                tts_audio_url: normalizedTtsUrl,
                 created_at: '',
               },
               created_at: '',
