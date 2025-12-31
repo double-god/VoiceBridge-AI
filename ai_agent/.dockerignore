@@ -1,32 +1,38 @@
-# 忽略本地虚拟环境
-
-venv/
-.venv/
-
-# 忽略字节码缓存
-
-pycache/
+# --- 核心：忽略本地环境 (防止 WSL 和 Linux 容器环境冲突) ---
+.venv
+venv
+env
+.Python
+__pycache__
 *.pyc
 *.pyo
 *.pyd
+.coverage
+htmlcov/
+.pytest_cache/
 
-# 忽略 Git 目录
-
-.git/
-.gitignore
-
-# 忽略日志和临时文件
-
-*.log
-*.wav
-
-# 忽略模型文件 (通过挂载卷提供，不打包进镜像)
-
+# --- 核心：忽略巨大文件 (解决 5GB+ 上下文问题) ---
+# 这些文件应该通过 docker-compose 的 volumes 挂载进去，而不是打入镜像
 pretrained_models/
-models/
-*.pt
-*.pth
-*.onnx
-*.bin
-*.safetensors
-*.mp3
+data/
+logs/
+output/
+temp/
+
+# --- 其他配置与工具 ---
+.git
+.gitignore
+.dockerignore
+.env
+.env.*
+.vscode
+.idea
+*.swp
+*.log
+DS_Store
+
+# --- 忽略测试与文档 (生产镜像不需要) ---
+tests/
+docs/
+scripts/
+README.md
